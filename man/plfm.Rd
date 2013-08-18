@@ -40,7 +40,7 @@ plfm(data,object,attribute,rating,freq1,freqtot,F,
 	logarithm of the posterior density becomes smaller than the convergence criterion \code{emcrit2}.  
 	Computational details about the implementation of the EM-steps for PLFMs are described in Maris, De Boeck, and Van Mechelen (1996). 
 	The general scheme of the accelerated algorithm is described in Louis (1982) and Tanner (1996). Computational details about implementing the accelerated algorithm 
-	for PLFMs are described in Meulders (2011).
+	for PLFMs are described in Meulders (2013).
 
 	When using the function \code{\link{plfm}} to estimate a particular PLFM (i.e. with a certain number of latent features and a disjunctive or conjunctive mapping rule), 
 	one may locate the distinct posterior mode(s) by running the algorithm \code{M} times using random starting points. The estimated object-and attribute parameters of 
@@ -112,7 +112,8 @@ Meulders, M., De Boeck, P., Van Mechelen, I., Gelman, A., and Maris, E. (2001). 
 Meulders, M., De Boeck, P., Van Mechelen, I., and Gelman, A. (2005). Probabilistic feature analysis of facial perception of emotions. 
 \emph{Applied Statistics, 54}, 781-793.
 
-Meulders, M. (2011). An R-Package for probabilistic latent feature analysis of two-way two-mode frequencies. \emph{Manuscript submitted for publication}.
+Meulders, M. (2013). An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies. \emph{Journal of Statistical Software, 54(14)}, 1-29. 
+   URL http://www.jstatsoft.org/v54/i14/.
 
 Tanner, M. A. (1996). \emph{Tools for statistical inference: Methods for the exploration of
 posterior distributions and likelihood functions} (Third ed.). New York:

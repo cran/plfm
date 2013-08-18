@@ -44,7 +44,7 @@ bayesplfm(data,object,attribute,rating,freq1,freqtot,F,
   The function \code{\link{bayesplfm}} can be used to compute a sample of the posterior 
   distribution of disjunctive or conjunctive probabilistic latent feature models with a particular number of features 
   using a data-augmented Gibbs sampling algorithm 
-  (Meulders, De Boeck, Van Mechelen, Gelman, and Maris, 2001; Meulders, De Boeck, Van Mechelen, and Gelman, 2005; Meulders, 2011).
+  (Meulders, De Boeck, Van Mechelen, Gelman, and Maris, 2001; Meulders, De Boeck, Van Mechelen, and Gelman, 2005; Meulders, 2013).
 
   By specifying the parameter \code{Nchains} the function can be used to compute one single chain, or multiple chains. 
   When only one chain is computed, no convergence measure is reported. When more than one chain is computed, for each parameter, 
@@ -96,7 +96,8 @@ Meulders, M., De Boeck, P., Van Mechelen, I., Gelman, A., and Maris, E. (2001). 
 Meulders, M., De Boeck, P., Van Mechelen, I., and Gelman, A. (2005). Probabilistic feature analysis of facial perception of emotions. 
 \emph{Applied Statistics, 54}, 781-793.
 
-Meulders, M. (2011). An R-Package for probabilistic latent feature analysis of two-way two-mode frequencies. \emph{Manuscript submitted for publication}.
+Meulders, M. (2013). An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies. \emph{Journal of Statistical Software, 54(14)}, 1-29. 
+   URL http://www.jstatsoft.org/v54/i14/.
 
 }
 \author{

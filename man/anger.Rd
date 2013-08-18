@@ -36,7 +36,9 @@ Kuppens, P., Van Mechelen, I., and Meulders, M. (2004). Every cloud has a silver
    Interpersonal and individual differences determinants of anger-related behaviors. \emph{Personality and Social Psychology Bulletin, 30}, 1550-1564. 
 
 
-Meulders, M. (2011). \emph{An R package for probabilistic Latent feature analysis of two-way two-mode frequencies.} Manuscript submitted for publication.
+Meulders, M. (2013). An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies. \emph{Journal of Statistical Software, 54(14)}, 1-29. 
+   URL http://www.jstatsoft.org/v54/i14/.
+
 
 Vermunt, J. K. (2007). A hierarchical mixture model for clustering three-way data
 sets. \emph{Computational Statistics and Data Analysis, 51}, 5368-5376.

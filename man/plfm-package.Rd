@@ -9,8 +9,8 @@ The package can be used for disjunctive and conjunctive probabilistic latent fea
 \tabular{ll}{
 Package: \tab plfm\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2013-02-15\cr
+Version: \tab 1.1\cr
+Date: \tab 2013-08-18\cr
 License: \tab GPL(>=2)\cr
 LazyLoad: \tab yes\cr
 }
@@ -20,6 +20,8 @@ The \code{\link{plfm}} function can be used to locate the posterior mode(s) of p
  The \code{\link{stepplfm}} function can be used to fit a series of disjunctive and/or conjunctive probabilistic latent feature models with different number of latent features. 
  In addition, the \code{\link{bayesplfm}} function can be used to compute a sample of the posterior distribution 
  in the neigbourhood of a specific posterior mode.
+
+To see the preferable citation of the package, type citation("plfm").
 
 }
 \author{
@@ -40,8 +42,8 @@ Multiple imputation for model checking: Completed-data plots with missing and la
 
 Maris, E., De Boeck, P., and Van Mechelen, I. (1996). Probability matrix decomposition models. \emph{Psychometrika, 61}, 7-29.
 
-Meulders, M. (2011). An R-Package for probabilistic latent feature analysis of two-way two-mode frequencies. 
-\emph{Manuscript submitted for publication}.
+Meulders, M. (2013). An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies. \emph{Journal of Statistical Software, 54(14)}, 1-29. 
+   URL http://www.jstatsoft.org/v54/i14/.
 
 Meulders, M., De Boeck, P., Kuppens, P., and Van Mechelen, I. (2002). Constrained latent
 class analysis of three-way three-mode data. \emph{Journal of Classification, 19}, 277-302.

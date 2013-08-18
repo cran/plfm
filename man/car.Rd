@@ -18,5 +18,7 @@
 }
 \source{Van Gysel, E. (2011). \emph{Perceptuele analyse van automodellen met probabilistische feature modellen.} [translation from Dutch: Perceptual analysis of car models with probabilistic feature models] 
         Master thesis. Hogeschool-Universiteit Brussel.}
-\references{Meulders, M. (2011). \emph{An R-Package for probabilistic latent feature analysis of two-way two-mode frequencies.} Manuscript submitted for publication.}
+\references{Meulders, M. (2013). An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies. \emph{Journal of Statistical Software, 54(14)}, 1-29. 
+   URL http://www.jstatsoft.org/v54/i14/.
+}
 \keyword{datasets}
