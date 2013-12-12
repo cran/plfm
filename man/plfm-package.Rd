@@ -9,8 +9,8 @@ The package can be used for disjunctive and conjunctive probabilistic latent fea
 \tabular{ll}{
 Package: \tab plfm\cr
 Type: \tab Package\cr
-Version: \tab 1.1\cr
-Date: \tab 2013-08-18\cr
+Version: \tab 1.1.1\cr
+Date: \tab 2013-12-12\cr
 License: \tab GPL(>=2)\cr
 LazyLoad: \tab yes\cr
 }
@@ -27,7 +27,7 @@ To see the preferable citation of the package, type citation("plfm").
 \author{
 Michel Meulders
 
-Maintainer: <michel.meulders@hubrussel.be>
+Maintainer: <michel.meulders@kuleuven.be>
 }
 \references{
 
