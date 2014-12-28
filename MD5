@@ -1,4 +1,4 @@
-37448b70ed6165a7de2f3cd7072018fc *DESCRIPTION
+0a8dab81c0f11ae0e51fc2350418ef41 *DESCRIPTION
 40788a4f103c70045d76c43f0390694a *NAMESPACE
 080efe0348a9c12a9f4f57bddc8ea4ce *R/plfm.R
 fb876fce55d87ef6a3e493c55864ab72 *data/anger.rda
@@ -8,7 +8,7 @@ d17393c245ce1b098f7eed99b016c96a *inst/CITATION
 b21fff62ccd3696d3de5dd78beccf79f *man/bayesplfm.Rd
 ac57c2f8883664eb087a8ce861113143 *man/car.Rd
 e35602f521a9d98d5e32259140605e77 *man/gendat.Rd
-6d857f1e8e94c827d18d813780ae945f *man/plfm-package.Rd
+e777ea3505c261b259f0860658e6e90c *man/plfm-package.Rd
 3b01c5a5fe285ff58c998c05af929332 *man/plfm.Rd
 4d7191e6b58405e36bc6cb18b270738a *man/plot.stepplfm.Rd
 9cb2c5d3d027ef8f490ea0e02f4aec9d *man/print.bayesplfm.Rd

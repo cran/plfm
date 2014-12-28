@@ -1,7 +1,7 @@
 \name{plfm-package}
 \alias{plfm-package}
 \docType{package}
-\title{Probabilistic latent feature analysis for two-way two-mode frequencies}
+\title{Probabilistic Feature Analysis of Two-Way Two-Mode Frequencies}
 \description{
 The package can be used for disjunctive and conjunctive probabilistic latent feature analysis on two-way two-mode frequencies
 }
@@ -9,8 +9,8 @@ The package can be used for disjunctive and conjunctive probabilistic latent fea
 \tabular{ll}{
 Package: \tab plfm\cr
 Type: \tab Package\cr
-Version: \tab 1.1.1\cr
-Date: \tab 2013-12-12\cr
+Version: \tab 1.1.2\cr
+Date: \tab 2014-12-28\cr
 License: \tab GPL(>=2)\cr
 LazyLoad: \tab yes\cr
 }
