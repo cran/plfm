@@ -2,8 +2,8 @@
 \alias{stepplfm}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Probabilistic latent feature analysis of two-way two-mode frequency data}
-\description{The function \code{\link{stepplfm}} subsequently applies the \code{\link{plfm}} function to fit disjunctive and/or conjunctive models with \emph{minF} up to \emph{maxF} latent features. 
-             The results of the different models are stored in a list.}  
+\description{The function \code{\link{stepplfm}} subsequently applies the \code{\link{plfm}} function to fit disjunctive and/or conjunctive models with \emph{minF} up to \emph{maxF} 
+latent features. The results of the different models are stored in a list.}  
 \usage{
 	stepplfm(minF,maxF,data,object,attribute,
  	rating,freq1,freqtot,datatype="freq",
@@ -52,27 +52,27 @@ Michel Meulders
 
 
 \dontrun{
-## example 1:Perceptual analysis of associations between car models and car attributes
+# example 1:Perceptual analysis of associations between car models and car attributes
 
-##load car data
+# load car data
 data(car)
 
 
-## compute 5 runs of disjunctive and conjunctive models with 1 up to 4 features
+# compute 5 runs of disjunctive and conjunctive models with 1 up to 4 features
 car.lst<-stepplfm(minF=1,maxF=4,maprule="disj/conj",freq1=car$freq1,
                   freqtot=car$freqtot,M=5,emcrit1=1e-6)
 
-## print output of the conjunctive model with 4 features
+# print output of the conjunctive model with 4 features
 car.lst$conj[[4]]
 
-## print output of the stepplfm analysis on the car data
+# print output of the stepplfm analysis on the car data
 car.lst
 
-##summarize and print output of stepplfm analysis on car data
+# summarize and print output of stepplfm analysis on car data
 sumcar<-summary(car.lst)
 sumcar
 
-## visualize fit of models with different mapping rules and a different number of features
+# visualize fit of models with different mapping rules and a different number of features
 par(pty="s")
 par(mfrow=c(2,2))
 plot(car.lst,which="BIC")
@@ -81,33 +81,34 @@ plot(car.lst,which="VAF")
 }
 
 
-## example 2: analysis on determinants of anger-related behavior
+\dontrun{
+# example 2: analysis on determinants of anger-related behavior
 
-## load anger data
+# load anger data
 data(anger)
 
-## compute 1 run of disjunctive models with 1 up to 3 features
+# compute 1 run of disjunctive models with 1 up to 3 features
 anger.lst<-stepplfm(minF=1,maxF=3,maprule="disj",freq1=anger$freq1,freqtot=anger$freqtot,M=1)
 
-## print output of disjunctive model with 2 features
+# print output of disjunctive model with 2 features
 
 anger.lst[[2]]
 
-## print output of stepplfm analysis on anger data
+# print output of stepplfm analysis on anger data
 anger.lst
 
-## summarize and print output of stepplfm analysis on anger data
+# summarize and print output of stepplfm analysis on anger data
 sumanger<-summary(anger.lst)
 sumanger
 
-## visualize fit of models with different mapping rules and a different number of features
+# visualize fit of models with different mapping rules and a different number of features
 
 par(pty="s")
 par(mfrow=c(2,2))
 plot(anger.lst,which="BIC")
 plot(anger.lst,which="AIC")
 plot(anger.lst,which="VAF")
-
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

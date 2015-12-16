@@ -141,7 +141,7 @@ conjbayes2<-bayesplfm(maprule="conj",freq1=gdat$freq1,freqtot=100,F=2,
 
 }
 
-
+\dontrun{
 ## example 2: Bayesian analysis of situational determinants of anger-related behavior
 
 ## load data
@@ -157,7 +157,7 @@ bayesangerdisj2a<-bayesplfm(maprule="disj",freq1=anger$freq1,freqtot=anger$freqt
 ##print a summary of the output 
 summary(bayesangerdisj2a)
 
-\dontrun{
+
 ## Compute a sample of the posterior distribution 
 ## for the disjunctive model with two features
 ## compute starting points with plfm

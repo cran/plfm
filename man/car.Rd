@@ -4,12 +4,14 @@
 \title{Ratings of associations between car models and car attributes}
 \description{ The data describe the ratings of 78 respondents about the association between each of 14 car models and each of 27 car attributes.}
 \usage{data(car)}
-\format{The data consist of a list of 3 objects:
+\format{The data consist of a list of 4 objects:
 \enumerate{
-\item data: A data frame that consists of 6 components:  Each row of the data frame  describes the outcome of a binary rater judgement
+\item datalongformat: A data frame that consists of 6 components:  Each row of the data frame  describes the outcome of a binary rater judgement
             about the association between a certain car and a certain attribute. The components \emph{IDobject} and \emph{objectlabel} contain an ID and 
              label for the car models, the components \emph{IDattribute} and \emph{attributelabel} contain an ID and  label for the attributes, the component \emph{IDrater} 
-            contains a rater ID, and the component \emph{rating} contains the binary  ratings (1 if the car model has the attribute according to the rater, and 0 otherwise).  
+            contains a rater ID, and the component \emph{rating} contains the binary  ratings (1 if the car model has the attribute according to the rater, and 0 otherwise).
+\item data3w: A 78 X 14 X 27 array of binary judgements. The observation in cell \emph{(i,j,k)} equals 1 if respondent \emph{i} indicates that car \emph{j} has 
+         attribute \emph{k}, and 0 otherwise.   
 \item freq1: A 14 X 27 matrix of frequencies. The frequency in cell \emph{(j,k)} indicates how many of 78 respondents 
  indicate an association between car model \emph{j} and attribute \emph{k}.
 \item freqtot: A 14 X 27 matrix of frequencies. The frequency in cell \emph{(j,k)} indicates the total number of respondents 

@@ -36,6 +36,7 @@ plot(car.lst,which="VAF")
 
 }
 
+\dontrun{
 ## example 2: analysis on determinants of anger-related behavior
 
 ## load anger data
@@ -53,7 +54,7 @@ par(mfrow=c(2,2))
 plot(anger.lst,which="BIC")
 plot(anger.lst,which="AIC")
 plot(anger.lst,which="VAF")
-
+}
 
 }
 

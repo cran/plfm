@@ -133,69 +133,72 @@ Michel Meulders
           \code{\link{summary.plfm}}, \code{\link{print.summary.plfm}}}
 \examples{
 
+\dontrun{
 ## example 1: Analysis of data generated under the model
 
-## define constants
+# define constants
 J<-20
 K<-15
 F<-2
 
-## generate true parameters
+# generate true parameters
 set.seed(43565)
 objectparameters<-matrix(runif(J*F),nrow=J)
 attributeparameters<-matrix(runif(K*F),nrow=K)
 
-## generate data for disjunctive model using N=200 replications
+# generate data for disjunctive model using N=200 replications
 gdat<-gendat(maprule="disj",N=200,
               objpar=objectparameters,attpar=attributeparameters)
 
-## Estimate a disjunctive probabilistic latent feature model with 2 features
-## suppress printing the type of analysis to the output screen
+# Estimate a disjunctive probabilistic latent feature model with 2 features
+# suppress printing the type of analysis to the output screen
 disj2<-plfm(maprule="disj",freq1=gdat$freq1,freqtot=200,F=2,M=1,printrun=FALSE)
+}
 
 
+\dontrun{
+# example 2:Perceptual analysis of associations between car models and car attributes
 
-## example 2:Perceptual analysis of associations between car models and car attributes
-
-##load car data
+# load car data
 data(car)
 
-## compute 1 run of a disjunctive model with 4 features
-## use components of a data frame as input
-cardisj4<-plfm(datatype="dataframe",data=car$data,object=objectlabel,attribute=attributelabel,
-               rating=rating,maprule="disj",F=4,M=1)
+# compute 1 run of a disjunctive model with 4 features
+# use components of a data frame as input
+cardisj4<-plfm(datatype="dataframe",data=car$datalongformat,object=objectlabel,
+               attribute=attributelabel,rating=rating,maprule="disj",F=4,M=1)
 
-## print the output of a disjunctive 4-feature model  
-##for data on the perception of car models
+# print the output of a disjunctive 4-feature model  
+# for data on the perception of car models
 print (cardisj4)
 
 
-## print a summary of the output of a disjunctive 4-feature model  
-##for data on the perception of car models
+# print a summary of the output of a disjunctive 4-feature model  
+# for data on the perception of car models
 sumcardisj4<-summary(cardisj4)
 sumcardisj4
+}
 
+\dontrun{
+# example 3: analysis on determinants of anger-related behavior
 
-## example 3: analysis on determinants of anger-related behavior
-
-## load anger data
+# load anger data
 data(anger)
 
-## compute 1 run of a disjunctive model with 2 features
-## use frequency data as input
+# compute 1 run of a disjunctive model with 2 features
+# use frequency data as input
 angerdisj2<-plfm(maprule="disj",freq1=anger$freq1,freqtot=anger$freqtot,F=2,M=1)
 
 
-## print the output of a disjunctive 2-feature model 
-##for data on the situational determinants of anger-related behaviors
+# print the output of a disjunctive 2-feature model 
+# for data on the situational determinants of anger-related behaviors
 print (angerdisj2)
 
 
-## print a summary of the output of a disjunctive 2-feature model 
-##for data on the situational determinants of anger-related behaviors
+# print a summary of the output of a disjunctive 2-feature model 
+# for data on the situational determinants of anger-related behaviors
 sumangerdisj2<-summary(angerdisj2)
 sumangerdisj2
-
+}
 
 
 }

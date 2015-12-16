@@ -503,6 +503,45 @@ colnames(strout)<-rep("",1)
 print(strout,quote="FALSE")
 }
 
+#############################################################
+## function plot.plfm
+############################################################
+
+plot.plfm<-function(x,feature=1,element="object",cexsymb=1,cexlabel=1,...){
+
+if (element=="object"){
+J<-dim(x$objpar)[1]
+F<-dim(x$objpar)[2]
+rowlab<-rownames(x$objpar)
+upper<-x$objpar+1.96*x$SE.objpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$objpar-1.96*x$SE.objpar
+lower<-ifelse(lower<0,0,lower)
+##par(pty="s")
+plot(-1,-1,xlim=c(-1,1),ylim=c(1,J),xlab="",ylab="",yaxt="n",bty="n",xaxp=c(0,1,4),...)
+for (i in 1:J) {points(x$objpar[i,feature],i,cex=cexsymb)}
+for (i in 1:J) {lines(c(lower[i,feature],upper[i,feature]),c(i,i))}
+for (i in 1:J) {text(-0.8,i,rowlab[i],cex=cexlabel)}
+} ## end class-independent object parameters
+
+
+else if (element=="attribute"){
+K<-dim(x$attpar)[1]
+F<-dim(x$attpar)[2]
+rowlab<-rownames(x$attpar)
+upper<-x$attpar+1.96*x$SE.attpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$attpar-1.96*x$SE.attpar
+lower<-ifelse(lower<0,0,lower)
+##par(pty="s")
+plot(-1,-1,xlim=c(-1,1),ylim=c(1,K),xlab="",ylab="",yaxt="n",bty="n",xaxp=c(0,1,4),...)
+for (i in 1:K) {points(x$attpar[i,feature],i,cex=cexsymb)}
+for (i in 1:K) {lines(c(lower[i,feature],upper[i,feature]),c(i,i))}
+for (i in 1:K) {text(-0.8,i,rowlab[i],cex=cexlabel)}
+} ## end class-independent attribute parameters
+
+}
+
 
 ###############################
 ## function summary.plfm
@@ -604,24 +643,24 @@ stepplfm<-function(minF,maxF,data,object,attribute,rating,freq1,freqtot,datatype
 
 tempcall<-match.call()
 tempcall<-tempcall[c(-2,-3)]
-
+if (maprule=="disj") tempcall$maprule<-"disj" else tempcall$maprule<-"conj"
 
 if (maprule=="disj"){
       stepplfm<-vector(mode="list",maxF-minF+1)        
-	for (f in (1:(maxF-minF+1))){
-       stepplfm[[f]]<-plfm(maprule="disj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+	for (f in (minF:maxF)){
+       stepplfm[[f-minF+1]]<-plfm(maprule="disj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
        tempcall$F<-as.numeric(f)
-       stepplfm[[f]]$call<-tempcall
+       stepplfm[[f-minF+1]]$call<-tempcall
       }
 
  }     
 
 else if (maprule=="conj"){
       stepplfm<-vector(mode="list",maxF-minF+1)          
-	for (f in (1:(maxF-minF+1))){
-       stepplfm[[f]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+	for (f in (minF:maxF)){
+       stepplfm[[f-minF+1]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
        tempcall$F<-as.numeric(f)
-       stepplfm[[f]]$call<-tempcall
+       stepplfm[[f-minF+1]]$call<-tempcall
 
       }
 
@@ -630,15 +669,15 @@ else if (maprule=="disj/conj"){
 	
       stepdisj<-vector(mode="list",maxF-minF+1)
       stepconj<-vector(mode="list",maxF-minF+1)          
-	for (f in (1:(maxF-minF+1))){
-       stepdisj[[f]]<-plfm(maprule="disj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+	for (f in (minF:maxF)){
+       stepdisj[[f-minF+1]]<-plfm(maprule="disj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
        tempcall$F<-as.numeric(f)
-      stepdisj[[f]]$call<-tempcall
+      stepdisj[[f-minF+1]]$call<-tempcall
       }
-      for (f in (1:(maxF-minF+1))){
-       stepconj[[f]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+      for (f in (minF:maxF)){
+       stepconj[[f-minF+1]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
        tempcall$F<-as.numeric(f)
-      stepconj[[f]]$call<-tempcall
+      stepconj[[f-minF+1]]$call<-tempcall
 
       }
 
@@ -662,7 +701,7 @@ if ((length(x$disj)==0)&(length(x$conj)==0)){
 	maxfeat<-dim(x[[nfeat]]$objpar)[2]
 	fitm<-t(sapply(x,function(obj) obj$fitmeasures))
 	colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitm)<-paste("F=",seq(minfeat:maxfeat),sep="")
+	rownames(fitm)<-paste("F=",seq(minfeat,maxfeat),sep="")
 
       if (x[[1]]$call$maprule=="disj"){
        	cat("\n*****************************") 
@@ -694,9 +733,9 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
       fitdisj<-t(sapply(x$disj,function(obj) obj$fitmeasures))
       fitconj<-t(sapply(x$conj,function(obj) obj$fitmeasures))
       colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitdisj)<-paste("F=",seq(minfeat:maxfeat),sep="")
+	rownames(fitdisj)<-paste("F=",seq(minfeat,maxfeat),sep="")
       colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitconj)<-paste("F=",seq(minfeat:maxfeat),sep="")
+	rownames(fitconj)<-paste("F=",seq(minfeat,maxfeat),sep="")
       
       cat("\n*****************************") 
       cat("\nDISJUNCTIVE MODEL\n")
@@ -735,8 +774,6 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
 }
 
 
-
-
 ################################
 ## function plot.stepplfm
 ################################
@@ -751,8 +788,8 @@ if ((length(x$disj)==0)&(length(x$conj)==0)){
 		maxfeat<-dim(x[[nfeat]]$objpar)[2]
 		fitm<-t(sapply(x,function(obj) obj$fitmeasures))
 		colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-		rownames(fitm)<-paste("F=",seq(minfeat:maxfeat),sep="")
-            plot(seq(minfeat:maxfeat),fitm[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),...)
+		rownames(fitm)<-paste("F=",seq(minfeat,maxfeat),sep="")
+            plot(seq(minfeat,maxfeat),fitm[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),...)
 
 
       	
@@ -767,15 +804,15 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
       	fitdisj<-t(sapply(x$disj,function(obj) obj$fitmeasures))
       	fitconj<-t(sapply(x$conj,function(obj) obj$fitmeasures))
 		colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-		rownames(fitdisj)<-paste("F=",seq(minfeat:maxfeat),sep="")
+		rownames(fitdisj)<-paste("F=",seq(minfeat,maxfeat),sep="")
 		colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-		rownames(fitconj)<-paste("F=",seq(minfeat:maxfeat),sep="")
+		rownames(fitconj)<-paste("F=",seq(minfeat,maxfeat),sep="")
             comb<-rbind(fitdisj,fitconj)
             minstat<-apply(comb,2,min)
             maxstat<-apply(comb,2,max)
 
-		plot(seq(minfeat:maxfeat),fitdisj[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),ylim=c(minstat[which],maxstat[which]),...)
-		lines(seq(minfeat:maxfeat),fitconj[,which],lty=2,type="b")
+		plot(seq(minfeat,maxfeat),fitdisj[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),ylim=c(minstat[which],maxstat[which]),...)
+		lines(seq(minfeat,maxfeat),fitconj[,which],lty=2,type="b")
 		if ((which=="BIC")|(which=="AIC")|(which=="Deviance")|(which=="Chisquare")){
             legend("topright",c("Disjunctive","Conjunctive"),lty=c(1,2),border=NULL,bty="n")}
             else if ((which=="Correlation")|(which=="VAF")){
@@ -804,10 +841,10 @@ summary.stepplfm<-function(object, ...)
 	
 
       if (object[[1]]$call$maprule=="disj"){
-       rownames(fitm)<-paste("DISJUNCTIVE F=",seq(minfeat:maxfeat),sep="")
+       rownames(fitm)<-paste("DISJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
     		}
      else if (object[[1]]$call$maprule=="conj"){
-       rownames(fitm)<-paste("CONJUNCTIVE F=",seq(minfeat:maxfeat),sep="")
+       rownames(fitm)<-paste("CONJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
 
 		}
 
@@ -823,9 +860,9 @@ else if ((length(object$disj)>0)|(length(object$conj)>0)){
       fitdisj<-t(sapply(object$disj,function(x) x$fitmeasures))
       fitconj<-t(sapply(object$conj,function(x) x$fitmeasures))
       colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitdisj)<-paste("DISJUNCTIVE F=",seq(minfeat:maxfeat),sep="")
+	rownames(fitdisj)<-paste("DISJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
       colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitconj)<-paste("CONJUNCTIVE F=",seq(minfeat:maxfeat),sep="")
+	rownames(fitconj)<-paste("CONJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
       result<-rbind(fitdisj,fitconj)      
       class(result)<-"summary.stepplfm"
       result 
@@ -1416,5 +1453,2545 @@ if (is.null(x$Rhatattpar)=="FALSE")
 print(x$Rhatattpar)}
 }
 
+
+#############################
+## function gendatLCplfm
+############################
+
+gendatLCplfm<-function(N,objpar,attpar,sizepar,maprule="disj",model=1){
+
+T<-length(sizepar)
+J<-dim(objpar)[1]
+K<-dim(attpar)[1]
+F<-dim(objpar)[2]
+
+
+if (sum((objpar<0)|(objpar>1)|is.nan(objpar))>0) print("Object parameters should all be non-missing and between 0 and 1")
+else if (sum((attpar<0)|(attpar>1)|is.nan(attpar))>0) print("Attribute parameters should all be between 0 and 1")
+else if ((maprule!="disj")&(maprule!="conj")) print("Incorrect specification of mapping rule")
+else if ((model!=1) & (model!=2)  & (model!=3) & (model!=4) & (model!=5) & (model!=6)) print("model should be specified as 1, 2, 3, 4, 5 or 6")
+else if (N<=0) print("The number of replications should be positive (N>0)")
+else if (N>0)
+{
+
+## draw latent class membership
+lc<-rmultinom(N,1,sizepar)
+lcnum<-t(lc)%*%c(1:T)
+
+
+## create empty output data
+data<-array(rep(0,N*J*K),c(N,J,K))
+
+if (model==1){
+for (i in 1:N){
+for (j in 1:J){
+latx<-rbinom(F,1,objpar[j,,lcnum[i]])
+for (k in 1:K){
+laty<-rbinom(F,1,attpar[k,])
+if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
+else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+}}}
+
+## compute conditional probabilities
+if (maprule=="disj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1 - objpar[, f, t] %o% attpar[, f])}}
+ condprob.JKT <- 1 - condprob.JKT
+}
+else if (maprule=="conj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1-(1 - objpar[, f, t]) %o% attpar[, f])}}
+}
+
+} ## end model==1
+
+if (model==2){
+for (i in 1:N){
+for (j in 1:J){
+latx<-rbinom(F,1,objpar[j,])
+for (k in 1:K){
+laty<-rbinom(F,1,attpar[k,,lcnum[i]])
+if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
+else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+}}}
+
+## compute conditional probabilities
+if (maprule=="disj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1 - objpar[, f] %o% attpar[, f, t])}}
+ condprob.JKT <- 1 - condprob.JKT
+}
+else if (maprule=="conj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1-(1 - objpar[, f]) %o% attpar[, f, t])}}
+}
+
+} ## end model==2
+
+if (model==3){
+for (i in 1:N){
+for (j in 1:J){
+latx<-rbinom(F,1,objpar[j,,lcnum[i]])
+for (k in 1:K){
+laty<-rbinom(F,1,attpar[k,,lcnum[i]])
+if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
+else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+}}}
+
+## compute conditional probabilities
+if (maprule=="disj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1 - objpar[, f, t] %o% attpar[, f, t])}}
+ condprob.JKT <- 1 - condprob.JKT
+}
+else if (maprule=="conj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1-(1 - objpar[, f, t]) %o% attpar[, f, t])}}
+}
+
+} ## end model==3
+
+if (model==4){
+for (i in 1:N){
+for (k in 1:K){
+laty<-rbinom(F,1,attpar[k,])
+for (j in 1:J){
+latx<-rbinom(F,1,objpar[j,,lcnum[i]])
+if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
+else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+}}}
+
+## compute conditional probabilities
+if (maprule=="disj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1 - objpar[, f, t] %o% attpar[, f])}}
+ condprob.JKT <- 1 - condprob.JKT
+}
+else if (maprule=="conj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1-(1 - objpar[, f, t]) %o% attpar[, f])}}
+}
+
+} ## end model==4
+
+if (model==5){
+for (i in 1:N){
+for (k in 1:K){
+laty<-rbinom(F,1,attpar[k,,lcnum[i]])
+for (j in 1:J){
+latx<-rbinom(F,1,objpar[j,])
+if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
+else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+}}}
+
+## compute conditional probabilities
+if (maprule=="disj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1 - objpar[, f] %o% attpar[, f, t])}}
+ condprob.JKT <- 1 - condprob.JKT
+}
+else if (maprule=="conj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1-(1 - objpar[, f]) %o% attpar[, f, t])}}
+}
+
+} ## end model==5
+
+if (model==6){
+for (i in 1:N){
+for (k in 1:K){
+laty<-rbinom(F,1,attpar[k,,lcnum[i]])
+for (j in 1:J){
+latx<-rbinom(F,1,objpar[j,,lcnum[i]])
+if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
+else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+}}}
+
+## compute conditional probabilities
+if (maprule=="disj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1 - objpar[, f, t] %o% attpar[, f, t])}}
+ condprob.JKT <- 1 - condprob.JKT
+}
+else if (maprule=="conj"){
+condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] * 
+       (1-(1 - objpar[, f, t]) %o% attpar[, f, t])}}
+}
+
+} ## end model==6
+
+## compute marginal association probabilities
+ margprob.JK <- matrix(rep(1, J * K), nrow = J)
+ weight <- rep(1, J) %o% rep(1, K) %o% sizepar
+ margprob.JK <- apply(weight * condprob.JKT, c(1, 2),sum)
+
+gendatLCplfm<-list(call=match.call(),data=data,class=lcnum,condprob.JKT=condprob.JKT,margprob.JK=margprob.JK)
+}
+}
+
+
+
+
+####################
+## function LCplfm
+####################
+
+LCplfm<-function(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,model=1,
+                 start.objectparameters=NULL,start.attributeparameters=NULL,
+                 start.sizeparameters=NULL,delta=0.0001,printrun=FALSE,update.objectparameters=NULL,update.attributeparameters=NULL)
+{
+
+# check input and analysis specifications
+# dimensions data
+
+NI<-dim(data)[1]
+NJ<-dim(data)[2]
+NK<-dim(data)[3]
+
+STOBJ<-rep(0,4)
+if (!is.null(start.objectparameters)){
+for (i in (1:length(dim(start.objectparameters)))){STOBJ[i]<-dim(start.objectparameters)[i]}
+}
+
+STATT<-rep(0,4)
+if (!is.null(start.attributeparameters)){
+for (i in (1:length(dim(start.attributeparameters)))){STATT[i]<-dim(start.attributeparameters)[i]}
+}
+
+STSIZE<-rep(0,2)
+if (!is.null(start.sizeparameters)){
+for (i in (1:length(dim(start.sizeparameters)))){STSIZE[i]<-dim(start.sizeparameters)[i]}
+}
+
+
+UPOBJ<-rep(0,3)
+if (!is.null(update.objectparameters)){
+for (i in (1:length(dim(update.objectparameters)))){UPOBJ[i]<-dim(update.objectparameters)[i]}
+}
+
+
+UPATT<-rep(0,3)
+if (!is.null(update.attributeparameters)){
+for (i in (1:length(dim(update.attributeparameters)))){UPATT[i]<-dim(update.attributeparameters)[i]}
+}
+
+
+
+if (length(dim(data))!=3|(NI<5)) {print("The array 'data' should be a three-way array with sufficient replications (I>5)")}
+else if (sum((data!=0) & (data!=1))>0){print("The elements of the array 'data' should equal 0 or 1")}
+else if (F<1){print("The number of latent features should be at least 1 (F>=1)")}
+else if (T<1){print("The number of latent classes should be at least 1 (T>=1)")}
+else if ((maprule!="disj") & (maprule!="conj")) {print("The mapping rule is not correctly specified")}
+else if (M<1) {print("The number of requested runs should be at least one (M>=1)")}
+else if (emcrit1<0 | emcrit2<0) {print("emcrit1 and emcrit2 should be small positive numbers")}
+
+
+else if  ((model==1| model==4| model==3| model==6) & (!is.null(start.objectparameters)) & (STOBJ[1] != NJ| STOBJ[2]!=F | STOBJ[3]!=T | STOBJ[4]!=M | sum(start.objectparameters==0|start.objectparameters==1)>0)) 
+{print("When model=1,4,3,6 start.objectparameters should be either NULL or a J x F x T x M array. The boundary values 0,1 cannot be used as starting values.")}
+
+else if  ((model==2|model==5) & (!is.null(start.objectparameters)) & (STOBJ[1] != NJ | STOBJ[2]!=F | STOBJ[3]!=M | sum(start.objectparameters==0|start.objectparameters==1)>0)) 
+{print("When model=2,5 start.objectparameters should be either NULL or a J x F x M array. The boundary values 0,1 cannot be used as starting values.")}
+
+else if  ((model==2|model==5|model==3|model==6) & (!is.null(start.attributeparameters)) & (STATT[1] != NK| STATT[2]!=F | STATT[3]!=T | STATT[4]!=M | sum(start.attributeparameters==0|start.attributeparameters==1)>0)) 
+{print("When model=2,5,3,6 start.attributeparameters should be either NULL or a K x F x T x M array. The boundary values 0,1 cannot be used as starting values.")}
+
+else if  ((model==1|model==4) & (!is.null(start.attributeparameters)) & (STATT[1] != NK | STATT[2]!=F | STATT[3]!=M | sum(start.attributeparameters==0|start.attributeparameters==1)>0)) 
+{print("When model=1,4 start.attributeparameters should be either NULL or a K x F x M array. The boundary values 0,1 cannot be used as starting values.")}
+
+else if  ((!is.null(start.sizeparameters)) & (STSIZE[1] != T | STSIZE[2]!=M)) 
+{print("Start.sizeparameters should be either NULL or a T x M matrix")}
+
+
+else if  ((model==1|model==4|model==3|model==6) & (!is.null(update.objectparameters)) & (UPOBJ[1] != NJ| UPOBJ[2]!=F | UPOBJ[3]!=T | sum(update.objectparameters!=0 & update.objectparameters!=1)>0)) 
+{print("When model=1,4,3,6 update.objectparameters should be either NULL or a binary valued (0/1) J x F x T array")}
+
+else if  ((model==2|model==5) & (!is.null(update.objectparameters)) & (UPOBJ[1] != NJ | UPOBJ[2]!=F | UPOBJ[3]!=M | sum(update.objectparameters!=0 & update.objectparameters!=1)>0)) 
+{print("When model=2,5 update.objectparameters should be either NULL or a binary valued (0/1) J x F matrix")}
+
+else if  ((model==2|model==5|model==3|model==6) & (!is.null(update.attributeparameters)) & (UPATT[1] != NK | UPATT[2]!=F | UPATT[3]!=T | sum(update.attributeparameters!=0 & update.attributeparameters!=1)>0)) 
+{print("When model=2,5,3,6 update.attributeparameters should be either NULL or a binary valued (0/1) K x F x T array")}
+
+else if  ((model==1|model==4) & (!is.null(update.attributeparameters)) & (UPATT[1] != NK | UPATT[2]!=F | sum(update.attributeparameters!=0 & update.attributeparameters!=1)>0)) 
+{print("When model=1,4 update.attributeparameters should be either NULL or a binary valued (0/1) K x F matrix")}
+
+
+
+else if (model==1){
+
+if (maprule=="conj") {data<-1-data}
+
+
+## data should be an IxJxK array
+I<-dim(data)[1]
+J<-dim(data)[2]
+K<-dim(data)[3]
+
+## define labels
+
+if (is.null(dimnames(data)[[1]])=="FALSE") raterlabels<-dimnames(data)[[1]]
+else raterlabels<-paste("RATER_", seq(1,I),sep="")
+
+if (is.null(dimnames(data)[[2]])=="FALSE") objectlabels<-dimnames(data)[[2]]
+else objectlabels<-paste("O_", seq(1,J),sep="")
+
+if (is.null(dimnames(data)[[3]])=="FALSE") attributelabels<-dimnames(data)[[3]]
+else attributelabels<-paste("A_", seq(1,K),sep="")
+
+featurelabels<-paste("F",seq(1,F),sep="")
+classlabels<-paste("T",seq(1,T),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+
+##transform data to be used by c++ function
+ndata<-c(aperm(data,c(1,3,2)))
+
+## define constants
+S<-2^F
+##Npar<-J*F*T+K*F+T-1
+
+## generate feature pattern matrix
+binmat<-matrix(rep(0,S*F),nrow=S)
+for (i in 1:(S-1)){binmat[i+1,]<-c(digitsBase(i,base=2,F))}
+Pat <- c(t(binmat))
+
+
+
+## define objects for output storage
+
+sigma.runs <- array(rep(0, J * F * T* M), c(J, F, T, M))
+rho.runs <- array(rep(0, K * F * M), c(K, F, M))
+gamma.runs<-array(rep(0, T * M), c(T, M))
+logpost.runs <- rep(0, M)
+names(logpost.runs)<-runlabels
+loglik.runs <-rep(0, M)
+names(loglik.runs)<-runlabels
+
+## generate random start values for M runs
+
+start.obj<-array(runif(J*F*T*M),c(J,F,T,M))
+start.att<-array(runif(K*F*M),c(K,F,M))
+start.size<-array(rep(1/T,T*M),c(T,M))
+
+for (run in 1:M){
+
+## define starting values for each run of algorithm
+
+
+if (is.null(start.objectparameters)){sigma.n<-c(start.obj[,,,run])}
+else {sigma.n<-c(aperm(start.objectparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+
+if (is.null(start.attributeparameters)){rho.n<-c(start.att[,,run])}
+else {rho.n<-c(t(start.attributeparameters[,,run]))}
+
+if (is.null(start.sizeparameters)){gamma.n<-start.size[,run]}
+else {gamma.n<-start.sizeparameters[,run]}
+
+## define parameters to update
+
+if (is.null(update.objectparameters)){ 
+sigma.update<-c(array(rep(1,J*F*T),c(J,F,T)))}
+else {sigma.update<-c(aperm(update.objectparameters,c(3,2,1)))}
+
+
+if (is.null(update.attributeparameters)){ 
+rho.update<-c(array(rep(1,K*F),c(K,F)))}
+else {rho.update<-c(t(update.attributeparameters))}
+
+## compute number of parameters
+Npar<-sum(sigma.update)+sum(rho.update)+T-1
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+
+
+result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+
+## take output from result
+sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.runs[,,run]<-matrix(result[[10]][1:(K*F)],nrow=K,byrow=T)
+gamma.runs[,run]<-result[[11]]
+logpost.runs[run]<-result[[21]]
+loglik.runs[run]<-result[[22]]
+
+if (printrun=="TRUE"){
+ 	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ }
+
+} ##end run
+
+## run final analysis with parameters of best solution as starting point
+
+best<-order(logpost.runs,decreasing=T)[1]
+if (F==1) {sigma.n<-array(sigma.runs[,,,best],c(J,F,T))} else if (F>1) {sigma.n<-sigma.runs[,,,best]}
+if (F==1){rho.n<-as.matrix(rho.runs[,,best])} else if (F>1) {rho.n<-rho.runs[,,best]}
+gamma.n<-gamma.runs[,best]
+
+if ((F==1) & (T==1) & (J>1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))} 
+if ((F>1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T>1) & (J==1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))}
+
+rho.n<-c(t(rho.n))
+gamma.n<-c(gamma.n)
+
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+
+
+## take output from result
+sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.best<-matrix(result[[10]][1:(K*F)],nrow=K,byrow=T)
+gamma.best<-result[[11]]
+
+dimnames(sigma.best)[[1]]<-as.list(objectlabels)
+dimnames(sigma.best)[[2]]<-as.list(featurelabels)
+dimnames(sigma.best)[[3]]<-as.list(classlabels)
+dimnames(rho.best)[[1]]<-as.list(attributelabels)
+dimnames(rho.best)[[2]]<-as.list(featurelabels)
+names(gamma.best)<-classlabels
+
+gradsigma.best<-aperm(array(result[[14]],c(T,F,J)),c(3,2,1))
+gradsigma.best[update.objectparameters==0]<-NaN
+
+gradrho.best<-matrix(result[[15]][1:(K*F)],nrow=K,byrow=T)
+gradrho.best[update.attributeparameters==0]<-NaN
+
+gradgamma.best<-result[[16]]
+
+dimnames(gradsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(gradsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(gradsigma.best)[[3]]<-as.list(classlabels)
+dimnames(gradrho.best)[[1]]<-as.list(attributelabels)
+dimnames(gradrho.best)[[2]]<-as.list(featurelabels)
+names(gradgamma.best)<-classlabels
+
+SEsigma.best<-aperm(array(result[[17]],c(T,F,J)),c(3,2,1))
+SEsigma.best[update.objectparameters==0]<-0
+
+SErho.best<-matrix(result[[18]][1:(K*F)],nrow=K,byrow=T)
+SErho.best[update.attributeparameters==0]<-0
+
+if (T==1){SEgamma.best<-0} else if (T>1) {SEgamma.best<-result[[19]]}
+
+dimnames(SEsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(SEsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(SEsigma.best)[[3]]<-as.list(classlabels)
+dimnames(SErho.best)[[1]]<-as.list(attributelabels)
+dimnames(SErho.best)[[2]]<-as.list(featurelabels)
+names(SEgamma.best)<-classlabels
+
+
+logpost.best<-result[[21]]
+loglik.best<-result[[22]]
+
+postprob.best<-matrix(result[[23]],nrow=I)
+colnames(postprob.best)<-classlabels
+
+
+##########################################################
+## compute conditional and marginal probabilities 
+###########################################################
+
+condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f])}}
+condprob.JKT<-1-condprob.JKT
+
+margprob.JK<-matrix(rep(1,J*K),nrow=J)
+weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
+margprob.JK<-apply(weight*condprob.JKT,c(1,2),sum)
+correl<-cor(c(apply(data,c(2,3),mean)),c(margprob.JK))
+VAF<-correl^2
+
+rownames(margprob.JK)<-objectlabels
+colnames(margprob.JK)<-attributelabels
+dimnames(condprob.JKT)[[1]]<-as.list(objectlabels)
+dimnames(condprob.JKT)[[2]]<-as.list(attributelabels)
+dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
+
+#########################################
+## compute fit measures
+########################################
+
+
+deviance<--2*loglik.best
+AIC<-deviance+2*Npar
+BIC<-deviance+Npar*log(I)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+
+tempcall<-match.call()
+if (maprule=="disj") tempcall$maprule<-"disj" else tempcall$maprule<-"conj"
+tempcall$model<-1
+
+if (maprule=="disj"){
+LCplfm<-list(call=tempcall,logpost.runs=logpost.runs,best=best,
+             objpar=sigma.best,attpar=rho.best,sizepar=gamma.best,
+             SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT)
+}
+else if (maprule=="conj"){
+LCplfm<-list(call=tempcall,logpost.runs=logpost.runs,best=best,
+             objpar=1-sigma.best,attpar=rho.best,sizepar=gamma.best,
+             SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT)
+
+}
+class(LCplfm)<-"LCplfm"
+LCplfm
+
+}## end model 1
+else if (model==2){
+
+if (maprule=="conj") {data<-1-data}
+
+## data should be an IxJxK array
+I<-dim(data)[1]
+J<-dim(data)[2]
+K<-dim(data)[3]
+
+## define labels
+
+if (is.null(dimnames(data)[[1]])=="FALSE") raterlabels<-dimnames(data)[[1]]
+else raterlabels<-paste("RATER_", seq(1,I),sep="")
+
+if (is.null(dimnames(data)[[2]])=="FALSE") objectlabels<-dimnames(data)[[2]]
+else objectlabels<-paste("O_", seq(1,J),sep="")
+
+if (is.null(dimnames(data)[[3]])=="FALSE") attributelabels<-dimnames(data)[[3]]
+else attributelabels<-paste("A_", seq(1,K),sep="")
+
+featurelabels<-paste("F",seq(1,F),sep="")
+classlabels<-paste("T",seq(1,T),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+
+##transform data to be used by c++ function
+ndata<-c(aperm(data,c(1,3,2)))
+
+## define constants
+S<-2^F
+##Npar<-J*F+K*F*T+T-1
+
+## generate feature pattern matrix
+binmat<-matrix(rep(0,S*F),nrow=S)
+for (i in 1:(S-1)){binmat[i+1,]<-c(digitsBase(i,base=2,F))}
+Pat <- c(t(binmat))
+
+
+
+## define objects for output storage
+
+sigma.runs <- array(rep(0, J * F * M), c(J, F, M))
+rho.runs <- array(rep(0, K * F * T * M), c(K, F, T, M))
+gamma.runs<-array(rep(0, T * M), c(T, M))
+logpost.runs <- rep(0, M)
+names(logpost.runs)<-runlabels
+loglik.runs <-rep(0, M)
+names(loglik.runs)<-runlabels
+
+## generate random start values for M runs
+
+start.obj<-array(runif(J*F*M),c(J,F,M))
+start.att<-array(runif(K*F*T*M),c(K,F,T,M))
+start.size<-array(rep(1/T,T*M),c(T,M))
+
+
+for (run in 1:M){
+
+## define starting values for each run of algorithm
+
+
+
+if (is.null(start.objectparameters)){sigma.n<-c(start.obj[,,run])}
+else {sigma.n<-c(t(start.objectparameters[,,run]))}
+
+if (is.null(start.attributeparameters)){rho.n<-c(start.att[,,,run])}
+else {rho.n<-c(aperm(start.attributeparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+if (is.null(start.sizeparameters)){gamma.n<-start.size[,run]}
+else {gamma.n<-start.sizeparameters[,run]}
+
+## define parameters to update
+
+if (is.null(update.objectparameters)){ 
+sigma.update<-c(array(rep(1,J*F),c(J,F)))}
+else {sigma.update<-c(t(update.objectparameters))}
+
+if (is.null(update.attributeparameters)){ 
+rho.update<-c(array(rep(1,K*F*T),c(K,F,T)))}
+else {rho.update<-c(aperm(update.attributeparameters,c(3,2,1)))}
+
+## compute number of parameters
+Npar<-sum(sigma.update)+sum(rho.update)+T-1
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+
+result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),
+              as.integer(0))
+
+
+## take output from result
+sigma.runs[,,run]<-matrix(result[[9]][1:(J*F)],nrow=J,byrow=T)
+rho.runs[,,,run]<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.runs[,run]<-result[[11]]
+logpost.runs[run]<-result[[21]]
+loglik.runs[run]<-result[[22]]
+
+if (printrun=="TRUE"){
+ 	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ } 
+
+} ##end run
+
+## run final analysis with parameters of best solution as starting point
+
+best<-order(logpost.runs,decreasing=T)[1]
+if (F==1) {rho.n<-array(rho.runs[,,,best],c(J,K,T))} else if (F>1) {rho.n<-rho.runs[,,,best]}
+if (F==1){sigma.n<-as.matrix(sigma.runs[,,best])} else if (F>1) {sigma.n<-sigma.runs[,,best]}
+
+gamma.n<-gamma.runs[,best]
+
+if ((F==1) & (T==1) & (K>1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (K>1)) {rho.n<-c(aperm(rho.n,c(2,1)))} 
+if ((F>1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (K==1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T==1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T>1) & (K==1)) {rho.n<-c(aperm(rho.n,c(2,1)))}
+
+sigma.n<-c(t(sigma.n))
+gamma.n<-c(gamma.n)
+
+
+gradsigma <- double (J*F)
+gradrho <- double(K*F*T)
+gradgamma <- double (T)
+
+SEsigma <- double (J*F)
+SErho <- double(K*F*T)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+
+
+## take output from result
+
+sigma.best<-matrix(result[[9]][1:(J*F)],nrow=J,byrow=T)
+rho.best<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.best<-result[[11]]
+
+dimnames(sigma.best)[[1]]<-as.list(objectlabels)
+dimnames(sigma.best)[[2]]<-as.list(featurelabels)
+dimnames(rho.best)[[1]]<-as.list(attributelabels)
+dimnames(rho.best)[[2]]<-as.list(featurelabels)
+dimnames(rho.best)[[3]]<-as.list(classlabels)
+names(gamma.best)<-classlabels
+
+gradsigma.best<-matrix(result[[14]][1:(J*F)],nrow=J,byrow=T)
+gradsigma.best[update.objectparameters==0]<-NaN
+
+gradrho.best<-aperm(array(result[[15]],c(T,F,K)),c(3,2,1))
+gradrho.best[update.attributeparameters==0]<-NaN
+
+gradgamma.best<-result[[16]]
+
+dimnames(gradsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(gradsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(gradrho.best)[[1]]<-as.list(attributelabels)
+dimnames(gradrho.best)[[2]]<-as.list(featurelabels)
+dimnames(gradrho.best)[[3]]<-as.list(classlabels)
+names(gradgamma.best)<-classlabels
+
+
+SEsigma.best<-matrix(result[[17]][1:(J*F)],nrow=J,byrow=T)
+SEsigma.best[update.objectparameters==0]<-0
+
+SErho.best<-aperm(array(result[[18]],c(T,F,K)),c(3,2,1))
+SErho.best[update.attributeparameters==0]<-0
+
+if (T==1){SEgamma.best<-0} else if (T>1) {SEgamma.best<-result[[19]]}
+
+dimnames(SEsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(SEsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(SErho.best)[[1]]<-as.list(attributelabels)
+dimnames(SErho.best)[[2]]<-as.list(featurelabels)
+dimnames(SErho.best)[[3]]<-as.list(classlabels)
+names(SEgamma.best)<-classlabels
+
+
+logpost.best<-result[[21]]
+loglik.best<-result[[22]]
+postprob.best<-matrix(result[[23]],nrow=I)
+colnames(postprob.best)<-classlabels
+
+##########################################################
+## compute conditional and marginal probabilities 
+###########################################################
+
+condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f]%o%rho.best[,f,t])}}
+condprob.JKT<-1-condprob.JKT
+
+margprob.JK<-matrix(rep(1,J*K),nrow=J)
+weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
+margprob.JK<-apply(weight*condprob.JKT,c(1,2),sum)
+correl<-cor(c(apply(data,c(2,3),mean)),c(margprob.JK))
+VAF<-correl^2
+
+rownames(margprob.JK)<-objectlabels
+colnames(margprob.JK)<-attributelabels
+dimnames(condprob.JKT)[[1]]<-as.list(objectlabels)
+dimnames(condprob.JKT)[[2]]<-as.list(attributelabels)
+dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
+
+
+#########################################
+## compute fit measures
+########################################
+
+
+deviance<--2*loglik.best
+AIC<-deviance+2*Npar
+BIC<-deviance+Npar*log(I)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+
+if (maprule=="disj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=sigma.best,attpar=rho.best,sizepar=gamma.best,
+             SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT)
+}
+else if (maprule=="conj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=1-sigma.best,attpar=rho.best,sizepar=gamma.best,
+             SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT)
+}
+
+class(LCplfm)<-"LCplfm"
+LCplfm
+
+} ## end model2
+
+else if (model==3){
+
+if (maprule=="conj") {data<-1-data}
+
+## data should be an IxJxK array
+I<-dim(data)[1]
+J<-dim(data)[2]
+K<-dim(data)[3]
+
+## define labels
+
+if (is.null(dimnames(data)[[1]])=="FALSE") raterlabels<-dimnames(data)[[1]]
+else raterlabels<-paste("RATER_", seq(1,I),sep="")
+
+if (is.null(dimnames(data)[[2]])=="FALSE") objectlabels<-dimnames(data)[[2]]
+else objectlabels<-paste("O_", seq(1,J),sep="")
+
+if (is.null(dimnames(data)[[3]])=="FALSE") attributelabels<-dimnames(data)[[3]]
+else attributelabels<-paste("A_", seq(1,K),sep="")
+
+featurelabels<-paste("F",seq(1,F),sep="")
+classlabels<-paste("T",seq(1,T),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+
+##transform data to be used by c++ function
+ndata<-c(aperm(data,c(1,3,2)))
+
+## define constants
+S<-2^F
+##Npar<-J*F*T+K*F*T+T-1
+
+## generate feature pattern matrix
+binmat<-matrix(rep(0,S*F),nrow=S)
+for (i in 1:(S-1)){binmat[i+1,]<-c(digitsBase(i,base=2,F))}
+Pat <- c(t(binmat))
+
+
+
+## define objects for output storage
+
+sigma.runs <- array(rep(0, J * F * T* M), c(J, F, T, M))
+rho.runs <- array(rep(0, K * F * T * M), c(K, F, T, M))
+gamma.runs<-array(rep(0, T * M), c(T, M))
+logpost.runs <- rep(0, M)
+names(logpost.runs)<-runlabels
+loglik.runs <-rep(0, M)
+names(loglik.runs)<-runlabels
+
+## generate random start values for M runs
+
+start.obj<-array(runif(J*F*T*M),c(J,F,T,M))
+start.att<-array(runif(K*F*T*M),c(K,F,T,M))
+start.size<-array(rep(1/T,T*M),c(T,M))
+
+
+for (run in 1:M){
+
+## define starting values for each run of algorithm
+
+
+if (is.null(start.objectparameters)){sigma.n<-c(start.obj[,,,run])}
+else {sigma.n<-c(aperm(start.objectparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+
+if (is.null(start.attributeparameters)){rho.n<-c(start.att[,,,run])}
+else {rho.n<-c(aperm(start.attributeparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+if (is.null(start.sizeparameters)){gamma.n<-start.size[,run]}
+else {gamma.n<-start.sizeparameters[,run]}
+
+## define parameters to update
+
+if (is.null(update.objectparameters)){ 
+sigma.update<-c(array(rep(1,J*F*T),c(J,F,T)))}
+else {sigma.update<-c(aperm(update.objectparameters,c(3,2,1)))}
+
+
+if (is.null(update.attributeparameters)){ 
+rho.update<-c(array(rep(1,K*F*T),c(K,F,T)))}
+else {rho.update<-c(aperm(update.attributeparameters,c(3,2,1)))}
+
+## compute number of parameters
+Npar<-sum(sigma.update)+sum(rho.update)+T-1
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F*T)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F*T)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+
+
+result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+
+## take output from result
+sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.runs[,,,run]<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.runs[,run]<-result[[11]]
+logpost.runs[run]<-result[[21]]
+loglik.runs[run]<-result[[22]]
+
+if (printrun=="TRUE"){
+ 	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ }
+
+} ##end run
+
+## run final analysis with parameters of best solution as starting point
+
+best<-order(logpost.runs,decreasing=T)[1]
+if (F==1) {sigma.n<-array(sigma.runs[,,,best],c(J,F,T))} else if (F>1) {sigma.n<-sigma.runs[,,,best]}
+if (F==1) {rho.n<-array(rho.runs[,,,best],c(K,F,T))} else if (F>1) {rho.n<-rho.runs[,,,best]}
+gamma.n<-gamma.runs[,best]
+
+if ((F==1) & (T==1) & (J>1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))} 
+if ((F>1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T>1) & (J==1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))}
+
+if ((F==1) & (T==1) & (K>1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (K>1)) {rho.n<-c(aperm(rho.n,c(2,1)))} 
+if ((F>1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))}
+
+
+if ((F==1) & (T==1) & (K==1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T==1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T>1) & (K==1)) {rho.n<-c(aperm(rho.n,c(2,1)))}
+
+gamma.n<-c(gamma.n)
+
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F*T)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F*T)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+
+
+## take output from result
+sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.best<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.best<-result[[11]]
+
+dimnames(sigma.best)[[1]]<-as.list(objectlabels)
+dimnames(sigma.best)[[2]]<-as.list(featurelabels)
+dimnames(sigma.best)[[3]]<-as.list(classlabels)
+dimnames(rho.best)[[1]]<-as.list(attributelabels)
+dimnames(rho.best)[[2]]<-as.list(featurelabels)
+dimnames(rho.best)[[3]]<-as.list(classlabels)
+names(gamma.best)<-classlabels
+
+gradsigma.best<-aperm(array(result[[14]],c(T,F,J)),c(3,2,1))
+gradsigma.best[update.objectparameters==0]<-NaN
+
+gradrho.best<-aperm(array(result[[15]],c(T,F,K)),c(3,2,1))
+gradrho.best[update.attributeparameters==0]<-NaN
+
+gradgamma.best<-result[[16]]
+
+dimnames(gradsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(gradsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(gradsigma.best)[[3]]<-as.list(classlabels)
+dimnames(gradrho.best)[[1]]<-as.list(attributelabels)
+dimnames(gradrho.best)[[2]]<-as.list(featurelabels)
+dimnames(gradrho.best)[[3]]<-as.list(classlabels)
+names(gradgamma.best)<-classlabels
+
+SEsigma.best<-aperm(array(result[[17]],c(T,F,J)),c(3,2,1))
+SEsigma.best[update.objectparameters==0]<-0
+
+SErho.best<-aperm(array(result[[18]],c(T,F,K)),c(3,2,1))
+SErho.best[update.attributeparameters==0]<-0
+
+if (T==1){SEgamma.best<-0} else if (T>1) {SEgamma.best<-result[[19]]}
+
+dimnames(SEsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(SEsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(SEsigma.best)[[3]]<-as.list(classlabels)
+dimnames(SErho.best)[[1]]<-as.list(attributelabels)
+dimnames(SErho.best)[[2]]<-as.list(featurelabels)
+dimnames(SErho.best)[[3]]<-as.list(classlabels)
+names(SEgamma.best)<-classlabels
+
+
+logpost.best<-result[[21]]
+loglik.best<-result[[22]]
+
+postprob.best<-matrix(result[[23]],nrow=I)
+colnames(postprob.best)<-classlabels
+
+##########################################################
+## compute conditional and marginal probabilities 
+###########################################################
+
+condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f,t])}}
+condprob.JKT<-1-condprob.JKT
+
+margprob.JK<-matrix(rep(1,J*K),nrow=J)
+weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
+margprob.JK<-apply(weight*condprob.JKT,c(1,2),sum)
+correl<-cor(c(apply(data,c(2,3),mean)),c(margprob.JK))
+VAF<-correl^2
+
+rownames(margprob.JK)<-objectlabels
+colnames(margprob.JK)<-attributelabels
+dimnames(condprob.JKT)[[1]]<-as.list(objectlabels)
+dimnames(condprob.JKT)[[2]]<-as.list(attributelabels)
+dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
+
+#########################################
+## compute fit measures
+########################################
+
+
+deviance<--2*loglik.best
+AIC<-deviance+2*Npar
+BIC<-deviance+Npar*log(I)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+
+if (maprule=="disj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=sigma.best,attpar=rho.best,sizepar=gamma.best,
+             SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT)
+}
+else if (maprule=="conj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=1-sigma.best,attpar=rho.best,sizepar=gamma.best,
+             SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT)
+}
+class(LCplfm)<-"LCplfm"
+LCplfm
+
+} ## end model 3
+
+else if (model==4){
+
+if (maprule=="conj") {data<-1-data}
+
+## switch role of objects and attributes
+data<-aperm(data,c(1,3,2))
+
+## data should be an IxJxK array
+I<-dim(data)[1]
+J<-dim(data)[2]
+K<-dim(data)[3]
+
+## define labels
+
+if (is.null(dimnames(data)[[1]])=="FALSE") raterlabels<-dimnames(data)[[1]]
+else raterlabels<-paste("RATER_", seq(1,I),sep="")
+
+if (is.null(dimnames(data)[[2]])=="FALSE") objectlabels<-dimnames(data)[[2]]
+else objectlabels<-paste("O_", seq(1,J),sep="")
+
+if (is.null(dimnames(data)[[3]])=="FALSE") attributelabels<-dimnames(data)[[3]]
+else attributelabels<-paste("A_", seq(1,K),sep="")
+
+featurelabels<-paste("F",seq(1,F),sep="")
+classlabels<-paste("T",seq(1,T),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+
+##transform data to be used by c++ function
+ndata<-c(aperm(data,c(1,3,2)))
+
+## define constants
+S<-2^F
+##Npar<-J*F+K*F*T+T-1
+
+## generate feature pattern matrix
+binmat<-matrix(rep(0,S*F),nrow=S)
+for (i in 1:(S-1)){binmat[i+1,]<-c(digitsBase(i,base=2,F))}
+Pat <- c(t(binmat))
+
+
+
+## define objects for output storage
+
+sigma.runs <- array(rep(0, J * F * M), c(J, F, M))
+rho.runs <- array(rep(0, K * F * T * M), c(K, F, T, M))
+gamma.runs<-array(rep(0, T * M), c(T, M))
+logpost.runs <- rep(0, M)
+names(logpost.runs)<-runlabels
+loglik.runs <-rep(0, M)
+names(loglik.runs)<-runlabels
+
+## generate random start values for M runs
+
+start.att<-array(runif(J*F*M),c(J,F,M))
+start.obj<-array(runif(K*F*T*M),c(K,F,T,M))
+start.size<-array(rep(1/T,T*M),c(T,M))
+
+for (run in 1:M){
+
+## define starting values for each run of algorithm
+
+
+
+if (is.null(start.attributeparameters)){sigma.n<-c(start.att[,,run])}
+else {sigma.n<-c(t(start.attributeparameters[,,run]))}
+
+if (is.null(start.objectparameters)){rho.n<-c(start.obj[,,,run])}
+else {rho.n<-c(aperm(start.objectparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+if (is.null(start.sizeparameters)){gamma.n<-start.size[,run]}
+else {gamma.n<-start.sizeparameters[,run]}
+
+## define parameters to update
+
+if (is.null(update.attributeparameters)){ 
+sigma.update<-c(array(rep(1,J*F),c(J,F)))}
+else {sigma.update<-c(t(update.attributeparameters))}
+
+if (is.null(update.objectparameters)){ 
+rho.update<-c(array(rep(1,K*F*T),c(K,F,T)))}
+else {rho.update<-c(aperm(update.objectparameters,c(3,2,1)))}
+
+## compute number of parameters
+Npar<-sum(sigma.update)+sum(rho.update)+T-1
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+
+result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),
+              as.integer(0))
+
+
+## take output from result
+sigma.runs[,,run]<-matrix(result[[9]][1:(J*F)],nrow=J,byrow=T)
+rho.runs[,,,run]<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+
+gamma.runs[,run]<-result[[11]]
+logpost.runs[run]<-result[[21]]
+loglik.runs[run]<-result[[22]]
+
+if (printrun=="TRUE"){
+ 	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ } 
+
+} ##end run
+
+## run final analysis with parameters of best solution as starting point
+
+best<-order(logpost.runs,decreasing=T)[1]
+if (F==1) {rho.n<-array(rho.runs[,,,best],c(J,K,T))} else if (F>1) {rho.n<-rho.runs[,,,best]}
+if (F==1){sigma.n<-as.matrix(sigma.runs[,,best])} else if (F>1) {sigma.n<-sigma.runs[,,best]}
+
+gamma.n<-gamma.runs[,best]
+
+if ((F==1) & (T==1) & (K>1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (K>1)) {rho.n<-c(aperm(rho.n,c(2,1)))} 
+if ((F>1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (K==1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T==1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T>1) & (K==1)) {rho.n<-c(aperm(rho.n,c(2,1)))}
+
+
+sigma.n<-c(t(sigma.n))
+gamma.n<-c(gamma.n)
+
+
+gradsigma <- double (J*F)
+gradrho <- double(K*F*T)
+gradgamma <- double (T)
+
+SEsigma <- double (J*F)
+SErho <- double(K*F*T)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+
+
+## take output from result
+
+sigma.best<-matrix(result[[9]][1:(J*F)],nrow=J,byrow=T)
+rho.best<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.best<-result[[11]]
+
+dimnames(sigma.best)[[1]]<-as.list(objectlabels)
+dimnames(sigma.best)[[2]]<-as.list(featurelabels)
+dimnames(rho.best)[[1]]<-as.list(attributelabels)
+dimnames(rho.best)[[2]]<-as.list(featurelabels)
+dimnames(rho.best)[[3]]<-as.list(classlabels)
+names(gamma.best)<-classlabels
+
+gradsigma.best<-matrix(result[[14]][1:(J*F)],nrow=J,byrow=T)
+gradsigma.best[update.attributeparameters==0]<-NaN
+
+gradrho.best<-aperm(array(result[[15]],c(T,F,K)),c(3,2,1))
+gradrho.best[update.objectparameters==0]<-NaN
+
+gradgamma.best<-result[[16]]
+
+dimnames(gradsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(gradsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(gradrho.best)[[1]]<-as.list(attributelabels)
+dimnames(gradrho.best)[[2]]<-as.list(featurelabels)
+dimnames(gradrho.best)[[3]]<-as.list(classlabels)
+names(gradgamma.best)<-classlabels
+
+
+SEsigma.best<-matrix(result[[17]][1:(J*F)],nrow=J,byrow=T)
+SEsigma.best[update.attributeparameters==0]<-0
+
+SErho.best<-aperm(array(result[[18]],c(T,F,K)),c(3,2,1))
+SErho.best[update.objectparameters==0]<-0
+
+
+if (T==1){SEgamma.best<-0} else if (T>1) {SEgamma.best<-result[[19]]}
+
+dimnames(SEsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(SEsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(SErho.best)[[1]]<-as.list(attributelabels)
+dimnames(SErho.best)[[2]]<-as.list(featurelabels)
+dimnames(SErho.best)[[3]]<-as.list(classlabels)
+names(SEgamma.best)<-classlabels
+
+
+logpost.best<-result[[21]]
+loglik.best<-result[[22]]
+postprob.best<-matrix(result[[23]],nrow=I)
+colnames(postprob.best)<-classlabels
+
+##########################################################
+## compute conditional and marginal probabilities 
+###########################################################
+
+condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f]%o%rho.best[,f,t])}}
+condprob.JKT<-1-condprob.JKT
+
+margprob.JK<-matrix(rep(1,J*K),nrow=J)
+weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
+margprob.JK<-apply(weight*condprob.JKT,c(1,2),sum)
+correl<-cor(c(apply(data,c(2,3),mean)),c(margprob.JK))
+VAF<-correl^2
+
+rownames(margprob.JK)<-objectlabels
+colnames(margprob.JK)<-attributelabels
+dimnames(condprob.JKT)[[1]]<-as.list(objectlabels)
+dimnames(condprob.JKT)[[2]]<-as.list(attributelabels)
+dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
+
+##margprob.JK<-t(margprob)
+##condprob.JKT<-aperm(condprob.JKT,c(2,1,3))
+
+#########################################
+## compute fit measures
+########################################
+
+
+deviance<--2*loglik.best
+AIC<-deviance+2*Npar
+BIC<-deviance+Npar*log(I)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+
+if (maprule=="disj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=rho.best,attpar=sigma.best,sizepar=gamma.best,
+             SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)))
+}
+else if (maprule=="conj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=1-rho.best,attpar=sigma.best,sizepar=gamma.best,
+             SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)))
+}
+class(LCplfm)<-"LCplfm"
+LCplfm
+
+} ## model 4
+
+else if (model==5){
+
+if (maprule=="conj") {data<-1-data}
+
+## switch role of objects and attributes
+data<-aperm(data,c(1,3,2))
+
+## data should be an IxJxK array
+I<-dim(data)[1]
+J<-dim(data)[2]
+K<-dim(data)[3]
+
+## define labels
+
+if (is.null(dimnames(data)[[1]])=="FALSE") raterlabels<-dimnames(data)[[1]]
+else raterlabels<-paste("RATER_", seq(1,I),sep="")
+
+if (is.null(dimnames(data)[[2]])=="FALSE") objectlabels<-dimnames(data)[[2]]
+else objectlabels<-paste("O_", seq(1,J),sep="")
+
+if (is.null(dimnames(data)[[3]])=="FALSE") attributelabels<-dimnames(data)[[3]]
+else attributelabels<-paste("A_", seq(1,K),sep="")
+
+featurelabels<-paste("F",seq(1,F),sep="")
+classlabels<-paste("T",seq(1,T),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+
+##transform data to be used by c++ function
+ndata<-c(aperm(data,c(1,3,2)))
+
+## define constants
+S<-2^F
+##Npar<-J*F*T+K*F+T-1
+
+## generate feature pattern matrix
+binmat<-matrix(rep(0,S*F),nrow=S)
+for (i in 1:(S-1)){binmat[i+1,]<-c(digitsBase(i,base=2,F))}
+Pat <- c(t(binmat))
+
+
+
+## define objects for output storage
+
+sigma.runs <- array(rep(0, J * F * T* M), c(J, F, T, M))
+rho.runs <- array(rep(0, K * F * M), c(K, F, M))
+gamma.runs<-array(rep(0, T * M), c(T, M))
+logpost.runs <- rep(0, M)
+names(logpost.runs)<-runlabels
+loglik.runs <-rep(0, M)
+names(loglik.runs)<-runlabels
+
+## generate random start values for M runs
+
+start.att<-array(runif(J*F*T*M),c(J,F,T,M))
+start.obj<-array(runif(K*F*M),c(K,F,M))
+start.size<-array(rep(1/T,T*M),c(T,M))
+
+for (run in 1:M){
+
+## define starting values for each run of algorithm
+
+
+
+if (is.null(start.attributeparameters)){sigma.n<-c(start.att[,,,run])}
+else {sigma.n<-c(aperm(start.attributeparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+
+if (is.null(start.objectparameters)){rho.n<-c(start.obj[,,run])}
+else {rho.n<-c(t(start.objectparameters[,,run]))}
+
+if (is.null(start.sizeparameters)){gamma.n<-start.size[,run]}
+else {gamma.n<-start.sizeparameters[,run]}
+
+
+## define parameters to update
+
+if (is.null(update.attributeparameters)){ 
+sigma.update<-c(array(rep(1,J*F*T),c(J,F,T)))}
+else {sigma.update<-c(aperm(update.attributeparameters,c(3,2,1)))}
+
+
+if (is.null(update.objectparameters)){ 
+rho.update<-c(array(rep(1,K*F),c(K,F)))}
+else {rho.update<-c(t(update.objectparameters))}
+
+## compute number of parameters
+Npar<-sum(sigma.update)+sum(rho.update)+T-1
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+
+
+result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+
+## take output from result
+sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.runs[,,run]<-matrix(result[[10]][1:(K*F)],nrow=K,byrow=T)
+gamma.runs[,run]<-result[[11]]
+logpost.runs[run]<-result[[21]]
+loglik.runs[run]<-result[[22]]
+
+if (printrun=="TRUE"){
+ 	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ }
+
+} ##end run
+
+## run final analysis with parameters of best solution as starting point
+
+best<-order(logpost.runs,decreasing=T)[1]
+if (F==1) {sigma.n<-array(sigma.runs[,,,best],c(J,F,T))} else if (F>1) {sigma.n<-sigma.runs[,,,best]}
+if (F==1){rho.n<-as.matrix(rho.runs[,,best])} else if (F>1) {rho.n<-rho.runs[,,best]}
+gamma.n<-gamma.runs[,best]
+
+if ((F==1) & (T==1) & (J>1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))} 
+if ((F>1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T>1) & (J==1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))}
+
+
+rho.n<-c(t(rho.n))
+gamma.n<-c(gamma.n)
+
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+
+
+## take output from result
+sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.best<-matrix(result[[10]][1:(K*F)],nrow=K,byrow=T)
+gamma.best<-result[[11]]
+
+dimnames(sigma.best)[[1]]<-as.list(objectlabels)
+dimnames(sigma.best)[[2]]<-as.list(featurelabels)
+dimnames(sigma.best)[[3]]<-as.list(classlabels)
+dimnames(rho.best)[[1]]<-as.list(attributelabels)
+dimnames(rho.best)[[2]]<-as.list(featurelabels)
+names(gamma.best)<-classlabels
+
+gradsigma.best<-aperm(array(result[[14]],c(T,F,J)),c(3,2,1))
+gradsigma.best[update.attributeparameters==0]<-NaN
+
+gradrho.best<-matrix(result[[15]][1:(K*F)],nrow=K,byrow=T)
+gradrho.best[update.objectparameters==0]<-NaN
+
+gradgamma.best<-result[[16]]
+
+dimnames(gradsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(gradsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(gradsigma.best)[[3]]<-as.list(classlabels)
+dimnames(gradrho.best)[[1]]<-as.list(attributelabels)
+dimnames(gradrho.best)[[2]]<-as.list(featurelabels)
+names(gradgamma.best)<-classlabels
+
+SEsigma.best<-aperm(array(result[[17]],c(T,F,J)),c(3,2,1))
+SEsigma.best[update.attributeparameters==0]<-0
+
+SErho.best<-matrix(result[[18]][1:(K*F)],nrow=K,byrow=T)
+SErho.best[update.objectparameters==0]<-0
+
+if (T==1){SEgamma.best<-0} else if (T>1) {SEgamma.best<-result[[19]]}
+
+dimnames(SEsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(SEsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(SEsigma.best)[[3]]<-as.list(classlabels)
+dimnames(SErho.best)[[1]]<-as.list(attributelabels)
+dimnames(SErho.best)[[2]]<-as.list(featurelabels)
+names(SEgamma.best)<-classlabels
+
+
+logpost.best<-result[[21]]
+loglik.best<-result[[22]]
+
+postprob.best<-matrix(result[[23]],nrow=I)
+colnames(postprob.best)<-classlabels
+
+##########################################################
+## compute conditional and marginal probabilities 
+###########################################################
+
+condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f])}}
+condprob.JKT<-1-condprob.JKT
+
+margprob.JK<-matrix(rep(1,J*K),nrow=J)
+weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
+margprob.JK<-apply(weight*condprob.JKT,c(1,2),sum)
+correl<-cor(c(apply(data,c(2,3),mean)),c(margprob.JK))
+VAF<-correl^2
+
+rownames(margprob.JK)<-objectlabels
+colnames(margprob.JK)<-attributelabels
+dimnames(condprob.JKT)[[1]]<-as.list(objectlabels)
+dimnames(condprob.JKT)[[2]]<-as.list(attributelabels)
+dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
+
+#########################################
+## compute fit measures
+########################################
+
+
+deviance<--2*loglik.best
+AIC<-deviance+2*Npar
+BIC<-deviance+Npar*log(I)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+
+if (maprule=="disj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=rho.best,attpar=sigma.best,sizepar=gamma.best,
+             SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)))
+}
+else if (maprule=="conj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=1-rho.best,attpar=sigma.best,sizepar=gamma.best,
+             SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)))
+}
+class(LCplfm)<-"LCplfm"
+LCplfm
+
+} ## end model 5
+
+else if (model==6){
+
+if (maprule=="conj") {data<-1-data}
+
+##switch role of objects and attributes
+data<-aperm(data,c(1,3,2))
+
+## data should be an IxJxK array
+I<-dim(data)[1]
+J<-dim(data)[2]
+K<-dim(data)[3]
+
+## define labels
+
+if (is.null(dimnames(data)[[1]])=="FALSE") raterlabels<-dimnames(data)[[1]]
+else raterlabels<-paste("RATER_", seq(1,I),sep="")
+
+if (is.null(dimnames(data)[[2]])=="FALSE") objectlabels<-dimnames(data)[[2]]
+else objectlabels<-paste("O_", seq(1,J),sep="")
+
+if (is.null(dimnames(data)[[3]])=="FALSE") attributelabels<-dimnames(data)[[3]]
+else attributelabels<-paste("A_", seq(1,K),sep="")
+
+featurelabels<-paste("F",seq(1,F),sep="")
+classlabels<-paste("T",seq(1,T),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+
+##transform data to be used by c++ function
+ndata<-c(aperm(data,c(1,3,2)))
+
+## define constants
+S<-2^F
+##Npar<-J*F*T+K*F*T+T-1
+
+## generate feature pattern matrix
+binmat<-matrix(rep(0,S*F),nrow=S)
+for (i in 1:(S-1)){binmat[i+1,]<-c(digitsBase(i,base=2,F))}
+Pat <- c(t(binmat))
+
+
+
+## define objects for output storage
+
+sigma.runs <- array(rep(0, J * F * T* M), c(J, F, T, M))
+rho.runs <- array(rep(0, K * F * T * M), c(K, F, T, M))
+gamma.runs<-array(rep(0, T * M), c(T, M))
+logpost.runs <- rep(0, M)
+names(logpost.runs)<-runlabels
+loglik.runs <-rep(0, M)
+names(loglik.runs)<-runlabels
+
+## generate random start values for M runs
+
+start.att<-array(runif(J*F*T*M),c(J,F,T,M))
+start.obj<-array(runif(K*F*T*M),c(K,F,T,M))
+start.size<-array(rep(1/T,T*M),c(T,M))
+
+for (run in 1:M){
+
+## define starting values for each run of algorithm
+
+
+
+if (is.null(start.attributeparameters)){sigma.n<-c(start.att[,,,run])}
+else {sigma.n<-c(aperm(start.attributeparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+
+if (is.null(start.objectparameters)){rho.n<-c(start.obj[,,,run])}
+else {rho.n<-c(aperm(start.objectparameters[,,,run,drop="FALSE"],c(4,3,2,1)))}
+
+if (is.null(start.sizeparameters)){gamma.n<-start.size[,run]}
+else {gamma.n<-start.sizeparameters[,run]}
+
+## define parameters to update
+
+if (is.null(update.attributeparameters)){ 
+sigma.update<-c(array(rep(1,J*F*T),c(J,F,T)))}
+else {sigma.update<-c(aperm(update.attributeparameters,c(3,2,1)))}
+
+
+if (is.null(update.objectparameters)){ 
+rho.update<-c(array(rep(1,K*F*T),c(K,F,T)))}
+else {rho.update<-c(aperm(update.objectparameters,c(3,2,1)))}
+
+## compute number of parameters
+Npar<-sum(sigma.update)+sum(rho.update)+T-1
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F*T)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F*T)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+
+
+result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+
+## take output from result
+sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.runs[,,,run]<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.runs[,run]<-result[[11]]
+logpost.runs[run]<-result[[21]]
+loglik.runs[run]<-result[[22]]
+
+if (printrun=="TRUE"){
+ 	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ }
+
+} ##end run
+
+## run final analysis with parameters of best solution as starting point
+
+best<-order(logpost.runs,decreasing=T)[1]
+if (F==1) {sigma.n<-array(sigma.runs[,,,best],c(J,F,T))} else if (F>1) {sigma.n<-sigma.runs[,,,best]}
+if (F==1) {rho.n<-array(rho.runs[,,,best],c(K,F,T))} else if (F>1) {rho.n<-rho.runs[,,,best]}
+gamma.n<-gamma.runs[,best]
+
+if ((F==1) & (T==1) & (J>1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))} 
+if ((F>1) & (T>1) & (J>1)) {sigma.n<-c(aperm(sigma.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)}
+if ((F==1) & (T>1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T==1) & (J==1)) {sigma.n<-c(sigma.n)} 
+if ((F>1) & (T>1) & (J==1)) {sigma.n<-c(aperm(sigma.n,c(2,1)))}
+
+
+if ((F==1) & (T==1) & (K>1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))} 
+if ((F>1) & (T==1) & (K>1)) {rho.n<-c(aperm(rho.n,c(2,1)))} 
+if ((F>1) & (T>1) & (K>1)) {rho.n<-c(aperm(rho.n,c(3,2,1)))}
+
+if ((F==1) & (T==1) & (K==1)) {rho.n<-c(rho.n)}
+if ((F==1) & (T>1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T==1) & (K==1)) {rho.n<-c(rho.n)} 
+if ((F>1) & (T>1) & (K==1)) {rho.n<-c(aperm(rho.n,c(2,1)))}
+
+
+gamma.n<-c(gamma.n)
+
+
+gradsigma <- double(J*F*T)
+gradrho <- double (K*F*T)
+gradgamma <- double (T)
+
+SEsigma <- double(J*F*T)
+SErho <- double (K*F*T)
+SEgamma <- double (T)
+
+logpost.n <- 0.0
+loglik.n <- 0.0
+
+postprob <- double (T*I)
+
+result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+
+
+## take output from result
+sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
+rho.best<-aperm(array(result[[10]],c(T,F,K)),c(3,2,1))
+gamma.best<-result[[11]]
+
+dimnames(sigma.best)[[1]]<-as.list(objectlabels)
+dimnames(sigma.best)[[2]]<-as.list(featurelabels)
+dimnames(sigma.best)[[3]]<-as.list(classlabels)
+dimnames(rho.best)[[1]]<-as.list(attributelabels)
+dimnames(rho.best)[[2]]<-as.list(featurelabels)
+dimnames(rho.best)[[3]]<-as.list(classlabels)
+names(gamma.best)<-classlabels
+
+gradsigma.best<-aperm(array(result[[14]],c(T,F,J)),c(3,2,1))
+gradsigma.best[update.attributeparameters==0]<-NaN
+
+gradrho.best<-aperm(array(result[[15]],c(T,F,K)),c(3,2,1))
+gradrho.best[update.objectparameters==0]<-NaN
+
+gradgamma.best<-result[[16]]
+
+dimnames(gradsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(gradsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(gradsigma.best)[[3]]<-as.list(classlabels)
+dimnames(gradrho.best)[[1]]<-as.list(attributelabels)
+dimnames(gradrho.best)[[2]]<-as.list(featurelabels)
+dimnames(gradrho.best)[[3]]<-as.list(classlabels)
+names(gradgamma.best)<-classlabels
+
+SEsigma.best<-aperm(array(result[[17]],c(T,F,J)),c(3,2,1))
+SEsigma.best[update.attributeparameters==0]<-0
+
+SErho.best<-aperm(array(result[[18]],c(T,F,K)),c(3,2,1))
+SErho.best[update.objectparameters==0]<-0
+
+if (T==1){SEgamma.best<-0} else if (T>1) {SEgamma.best<-result[[19]]}
+
+dimnames(SEsigma.best)[[1]]<-as.list(objectlabels)
+dimnames(SEsigma.best)[[2]]<-as.list(featurelabels)
+dimnames(SEsigma.best)[[3]]<-as.list(classlabels)
+dimnames(SErho.best)[[1]]<-as.list(attributelabels)
+dimnames(SErho.best)[[2]]<-as.list(featurelabels)
+dimnames(SErho.best)[[3]]<-as.list(classlabels)
+names(SEgamma.best)<-classlabels
+
+
+logpost.best<-result[[21]]
+loglik.best<-result[[22]]
+
+postprob.best<-matrix(result[[23]],nrow=I)
+colnames(postprob.best)<-classlabels
+
+
+##########################################################
+## compute conditional and marginal probabilities 
+###########################################################
+
+condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f,t])}}
+condprob.JKT<-1-condprob.JKT
+
+margprob.JK<-matrix(rep(1,J*K),nrow=J)
+weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
+margprob.JK<-apply(weight*condprob.JKT,c(1,2),sum)
+correl<-cor(c(apply(data,c(2,3),mean)),c(margprob.JK))
+VAF<-correl^2
+
+rownames(margprob.JK)<-objectlabels
+colnames(margprob.JK)<-attributelabels
+dimnames(condprob.JKT)[[1]]<-as.list(objectlabels)
+dimnames(condprob.JKT)[[2]]<-as.list(attributelabels)
+dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
+
+
+#########################################
+## compute fit measures
+########################################
+
+
+deviance<--2*loglik.best
+AIC<-deviance+2*Npar
+BIC<-deviance+Npar*log(I)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+
+if (maprule=="disj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=rho.best,attpar=sigma.best,sizepar=gamma.best,
+             SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)))
+}
+else if (maprule=="conj"){
+LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
+             objpar=1-rho.best,attpar=sigma.best,sizepar=gamma.best,
+             SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
+             gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)))
+}
+class(LCplfm)<-"LCplfm"
+LCplfm
+
+} ##end model 6
+
+} ## end function 
+
+
+############################
+## function print.LCplfm
+############################
+
+print.LCplfm<-function(x, ...)
+{
+
+if ((x$call$model==1) | (x$call$model==4)){
+
+T<-dim(x$objpar)[3]
+
+cat("Call:\n")
+print(x$call)
+
+cat("\nFIT MEASURES:\n")
+crit<-as.matrix(x$fitmeasures[1:5])
+rownames(crit)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC")
+colnames(crit)<-""
+print(round(crit))
+
+cat("\nDESCRIPTIVE FIT:\n")
+crit<-as.matrix(x$fitmeasures[6:7])
+rownames(crit)<-c("Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+colnames(crit)<-""
+print(round(crit,3))
+
+
+cat("\nESTIMATE OBJECT PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$objpar[,,i],2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+cat("\nESTIMATE ATTRIBUTE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$attpar,2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")
+
+if (T>1){
+cat("\nESTIMATE CLASS SIZE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$sizepar,2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+cat("\nSTANDARD ERROR OBJECT PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$SE.objpar[,,i],3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+cat("\nSTANDARD ERROR ATTRIBUTE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$SE.attpar,3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")
+
+if (T>1){
+cat("\nSTANDARD ERROR CLASS SIZE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$SE.sizepar,3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+} ## end model 1,4
+else if ((x$call$model==2) | (x$call$model==5)){
+
+T<-dim(x$attpar)[3]
+
+cat("Call:\n")
+print(x$call)
+
+cat("\nFIT MEASURES:\n")
+crit<-as.matrix(x$fitmeasures[1:5])
+rownames(crit)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC")
+colnames(crit)<-""
+print(round(crit))
+
+cat("\nDESCRIPTIVE FIT:\n")
+crit<-as.matrix(x$fitmeasures[6:7])
+rownames(crit)<-c("Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+colnames(crit)<-""
+print(round(crit,3))
+
+
+cat("\nESTIMATE OBJECT PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$objpar,2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")
+
+
+cat("\nESTIMATE ATTRIBUTE PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$attpar[,,i],2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+if (T>1){
+cat("\nESTIMATE CLASS SIZE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$sizepar,2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+cat("\nSTANDARD ERROR OBJECT PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$SE.objpar,3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")
+
+cat("\nSTANDARD ERROR ATTRIBUTE PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$SE.attpar[,,i],3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+if (T>1){
+cat("\nSTANDARD ERROR CLASS SIZE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$SE.sizepar,3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+} ## end model 2,5
+
+else if ((x$call$model==3) | (x$call$model==6)){
+
+T<-dim(x$objpar)[3]
+
+cat("Call:\n")
+print(x$call)
+
+cat("\nFIT MEASURES:\n")
+crit<-as.matrix(x$fitmeasures[1:5])
+rownames(crit)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC")
+colnames(crit)<-""
+print(round(crit))
+
+cat("\nDESCRIPTIVE FIT:\n")
+crit<-as.matrix(x$fitmeasures[6:7])
+rownames(crit)<-c("Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+colnames(crit)<-""
+print(round(crit,3))
+
+cat("\nESTIMATE OBJECT PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$objpar[,,i],2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+cat("\nESTIMATE ATTRIBUTE PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$attpar[,,i],2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+if (T>1){
+cat("\nESTIMATE CLASS SIZE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$sizepar,2)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+
+cat("\nSTANDARD ERROR OBJECT PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$SE.objpar[,,i],3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+cat("\nSTANDARD ERROR ATTRIBUTE PARAMETERS:\n")
+for (i in 1:T){
+if (T>1) {cat("\nSEGMENT",i)}
+strout<-as.matrix(capture.output(round(x$SE.attpar[,,i],3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+if (T>1){
+cat("\nSTANDARD ERROR CLASS SIZE PARAMETERS:\n")
+strout<-as.matrix(capture.output(round(x$SE.sizepar,3)))
+strout<- gsub(" 0", "  ", strout)
+rownames(strout)<-rep("",length(strout))
+colnames(strout)<-rep("",1)
+print(strout,quote="FALSE")}
+
+} ## end model 3,6
+}
+
+
+#############################################################
+## function plot.LCplfm
+############################################################
+
+plot.LCplfm<-function(x,feature=1,class=0,element="object",cexsymb=1,cexlabel=1, minpositionlabel=-1, positionlabel=-0.8,xlegend="topright",ylegend=NULL,x.intersplegend=1,y.intersplegend=1,...){
+
+if ((x$call$model==1|x$call$model==4) & (element=="object") & (class==0)){ 
+
+J<-dim(x$objpar)[1]
+F<-dim(x$objpar)[2]
+T<-dim(x$objpar)[3]
+rowlab<-dimnames(x$objpar)[[1]]
+classlab<-dimnames(x$objpar)[[3]]
+
+level<-seq(1,(T+2)*J)
+##par(pty="s")
+symb<-c(1,19,4,8,17,5,0) 
+plot(-10,-10,xlim=c(minpositionlabel,1),ylim=c(1,((T+2)*J)+3*T),yaxt="n",bty="n",ylab="",xlab="",xaxp=c(0,1,4),...)
+
+levelmat<-matrix(rep(1,J*T),nrow=J)
+for (t in 1:T){levelmat[,t]<-seq(1,(T+2)*J,T+2)+t}                                                          
+for (i in 1:J){text(positionlabel,levelmat[i,(1+round(T/2))],rowlab[i],cex=cexlabel)}
+
+upper<-x$objpar+1.96*x$SE.objpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$objpar-1.96*x$SE.objpar
+lower<-ifelse(lower<0,0,lower)
+
+for (t in 1:T){
+ for (j in 1:J){
+  points(x$objpar[j,feature,t],levelmat[j,t],pch=symb[t],cex=cexsymb)
+  lines(c(lower[j,feature,t],upper[j,feature,t]),c(levelmat[j,t],levelmat[j,t]))}}
+
+if (T>1) {legend(x=xlegend,y=ylegend,x.intersp=x.intersplegend,y.intersp=y.intersplegend,classlab,pch=symb[1:T],lty=rep(1,T),bty="n")}
+
+} ## end class-specific object parameters 
+
+else if ((x$call$model==2|x$call$model==5) & (element=="attribute") & (class==0)){
+
+K<-dim(x$attpar)[1]
+F<-dim(x$attpar)[2]
+T<-dim(x$attpar)[3]
+rowlab<-dimnames(x$attpar)[[1]]
+classlab<-dimnames(x$attpar)[[3]]
+
+level<-seq(1,(T+2)*K)
+##par(pty="s")
+symb<-c(1,19,4,8,17,5,0) 
+plot(-10,-10,xlim=c(minpositionlabel,1),ylim=c(1,((T+2)*K)+3*T),yaxt="n",bty="n",ylab="",xlab="",xaxp=c(0,1,4),...)
+
+levelmat<-matrix(rep(1,K*T),nrow=K)
+for (t in 1:T){levelmat[,t]<-seq(1,(T+2)*K,T+2)+t}                                                          
+for (i in 1:K){text(positionlabel,levelmat[i,(1+round(T/2))],rowlab[i],cex=cexlabel)}
+
+upper<-x$attpar+1.96*x$SE.attpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$attpar-1.96*x$SE.attpar
+lower<-ifelse(lower<0,0,lower)
+
+for (t in 1:T){
+ for (k in 1:K){
+  points(x$attpar[k,feature,t],levelmat[k,t],pch=symb[t],cex=cexsymb)
+  lines(c(lower[k,feature,t],upper[k,feature,t]),c(levelmat[k,t],levelmat[k,t]))}}
+
+if (T>1) {legend(x=xlegend,y=ylegend,x.intersp=x.intersplegend,y.intersp=y.intersplegend,classlab,pch=symb[1:T],lty=rep(1,T),bty="n")}
+
+} ## end class-specific attribute parameters 
+
+else if ((x$call$model==3|x$call$model==6) & (element=="object") & (class==0)){
+print("comparing object parameters of different classes is only meaningful if attribute parameters are constrained to be equal across classes")
+}
+
+else if ((x$call$model==3|x$call$model==6) & (element=="attribute") & (class==0)){
+print("comparing attribute parameters of different classes is only meaningful if object parameters are constrained to be equal across classes")
+}
+
+else if ((x$call$model==2|x$call$model==5) & (element=="object")){
+J<-dim(x$objpar)[1]
+F<-dim(x$objpar)[2]
+rowlab<-rownames(x$objpar)
+upper<-x$objpar+1.96*x$SE.objpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$objpar-1.96*x$SE.objpar
+lower<-ifelse(lower<0,0,lower)
+##par(pty="s")
+plot(-10,-10,xlim=c(minpositionlabel,1),ylim=c(1,J),xlab="",ylab="",yaxt="n",bty="n",xaxp=c(0,1,4),...)
+for (i in 1:J) {points(x$objpar[i,feature],i,cex=cexsymb)}
+for (i in 1:J) {lines(c(lower[i,feature],upper[i,feature]),c(i,i))}
+for (i in 1:J) {text(positionlabel,i,rowlab[i],cex=cexlabel)}
+} ## end class-independent object parameters
+
+
+else if ((x$call$model==1|x$call$model==4) & (element=="attribute")){
+K<-dim(x$attpar)[1]
+F<-dim(x$attpar)[2]
+rowlab<-rownames(x$attpar)
+upper<-x$attpar+1.96*x$SE.attpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$attpar-1.96*x$SE.attpar
+lower<-ifelse(lower<0,0,lower)
+##par(pty="s")
+plot(-10,-10,xlim=c(minpositionlabel,1),ylim=c(1,K),xlab="",ylab="",yaxt="n",bty="n",xaxp=c(0,1,4),...)
+for (i in 1:K) {points(x$attpar[i,feature],i,cex=cexsymb)}
+for (i in 1:K) {lines(c(lower[i,feature],upper[i,feature]),c(i,i))}
+for (i in 1:K) {text(positionlabel,i,rowlab[i],cex=cexlabel)}
+} ## end class-independent attribute parameters
+
+else if ((x$call$model==1|x$call$model==4|x$call$model==3|x$call$model==6) & (element=="object") & (class!=0)){
+J<-dim(x$objpar)[1]
+F<-dim(x$objpar)[2]
+rowlab<-dimnames(x$objpar)[[1]]
+upper<-x$objpar+1.96*x$SE.objpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$objpar-1.96*x$SE.objpar
+lower<-ifelse(lower<0,0,lower)
+##par(pty="s")
+plot(-10,-10,xlim=c(minpositionlabel,1),ylim=c(1,J),xlab="",ylab="",yaxt="n",bty="n",xaxp=c(0,1,4),...)
+for (i in 1:J) {points(x$objpar[i,feature,class],i,cex=cexsymb)}
+for (i in 1:J) {lines(c(lower[i,feature,class],upper[i,feature,class]),c(i,i))}
+for (i in 1:J) {text(positionlabel,i,rowlab[i],cex=cexlabel)}
+} ## end object parameters per class
+
+else if ((x$call$model==2|x$call$model==3|x$call$model==5|x$call$model==6) & (element=="attribute") & (class!=0)){
+K<-dim(x$attpar)[1]
+F<-dim(x$attpar)[2]
+rowlab<-dimnames(x$attpar)[[1]]
+upper<-x$attpar+1.96*x$SE.attpar
+upper<-ifelse(upper>1,1,upper)
+lower<-x$attpar-1.96*x$SE.attpar
+lower<-ifelse(lower<0,0,lower)
+##par(pty="s")
+plot(-10,-10,xlim=c(minpositionlabel,1),ylim=c(1,K),xlab="",ylab="",yaxt="n",bty="n",xaxp=c(0,1,4),...)
+for (i in 1:K) {points(x$attpar[i,feature,class],i,cex=cexsymb)}
+for (i in 1:K) {lines(c(lower[i,feature,class],upper[i,feature,class]),c(i,i))}
+for (i in 1:K) {text(positionlabel,i,rowlab[i],cex=cexlabel)}
+} ## end  attribute parameters per class
+
+}
+
+############################################################
+## function stepLCplfm
+#############################################################
+
+stepLCplfm<-function(minF=1,maxF=3,minT=1,maxT=3,data,maprule="disj",M=5,emcrit1=1e-3,emcrit2=1e-8,model=1,delta=0.0001,printrun=FALSE)
+{
+tempcall<-match.call()
+tempcall<-tempcall[c(-2,-3,-4,-5)]
+
+nF<-maxF-minF+1
+nT<-maxT-minT+1
+
+stepLCplfm<-matrix(rep(vector(mode="list",1),nT*nF),c(nF,nT))
+rownames(stepLCplfm)<-paste("F_", seq(minF,maxF),sep="")
+colnames(stepLCplfm)<-paste("T_", seq(minT,maxT),sep="")
+
+
+for (f in (minF:maxF)){
+ for (t in (minT:maxT)){
+ stepLCplfm[[f-minF+1,t-minT+1]]<-LCplfm(data=data,F=f,T=t,M=M,maprule=maprule,model=model,emcrit1=emcrit1,emcrit2=emcrit2,delta=delta,printrun=printrun)
+
+ tempcall$F<-as.numeric(f)
+ tempcall$T<-as.numeric(t)
+ if (maprule=="disj") tempcall$maprule<-"disj" else tempcall$maprule<-"conj"
+ if (model==1) tempcall$model<-1
+ else if (model==2) tempcall$model<-2
+ else if (model==3) tempcall$model<-3
+ else if (model==4) tempcall$model<-4
+ else if (model==5) tempcall$model<-5
+ else if (model==6) tempcall$model<-6
+
+ stepLCplfm[[f-minF+1,t-minT+1]]$call<-tempcall
+}}
+
+class(stepLCplfm)<-"stepLCplfm"
+stepLCplfm
+}
+
+############################################################
+## function print.stepLCplfm
+#############################################################
+
+print.stepLCplfm<-function(x, ...)
+{
+ nF<-dim(x)[1]
+ nT<-dim(x)[2]
+ minF<-x[[1,1]]$call$F
+ maxF<-x[[nF,1]]$call$F
+ minT<-x[[1,1]]$call$T
+ maxT<-x[[1,nT]]$call$T
+
+ fitm<-t(sapply(x,function(obj) obj$fitmeasures))
+ colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF")
+ 
+ rowlab<-rep(" ",nT*nF)
+  for (f in minF:maxF){
+   for (t in minT:maxT){
+    r<-f-minF+1    
+    k<-t-minT+1
+    rowlab[(k-1)*nF+r]<-paste("F=",f," T=",t,sep="")
+  }}
+ rownames(fitm)<-rowlab
+
+ if ((x[[1,1]]$call$maprule=="disj") & (x[[1,1]]$call$model==1)){
+ cat("\n*****************************") 
+ cat("\nDISJUNCTIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="disj") & (x[[1,1]]$call$model==2)){
+ cat("\n*****************************") 
+ cat("\nDISJUNCTIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="disj") & (x[[1,1]]$call$model==3)){
+ cat("\n*****************************") 
+ cat("\nDISJUNCTIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT AND ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="disj") & (x[[1,1]]$call$model==4)){
+ cat("\n*****************************") 
+ cat("\nDISJUNCTIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="disj") & (x[[1,1]]$call$model==5)){
+ cat("\n*****************************") 
+ cat("\nDISJUNCTIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="disj") & (x[[1,1]]$call$model==6)){
+ cat("\n*****************************") 
+ cat("\nDISJUNCTIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT AND ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ 
+ if ((x[[1,1]]$call$maprule=="conj") & (x[[1,1]]$call$model==1)){
+ cat("\n*****************************") 
+ cat("\nCONJUNCTIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="conj") & (x[[1,1]]$call$model==2)){
+ cat("\n*****************************") 
+ cat("\nCONJUNCTIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="conj") & (x[[1,1]]$call$model==3)){
+ cat("\n*****************************") 
+ cat("\nCONJUNCTIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT AND ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="conj") & (x[[1,1]]$call$model==4)){
+ cat("\n*****************************") 
+ cat("\nCONJUNCTIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="conj") & (x[[1,1]]$call$model==5)){
+ cat("\n*****************************") 
+ cat("\nCONJUNCTIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="conj") & (x[[1,1]]$call$model==6)){
+ cat("\n*****************************") 
+ cat("\nCONJUNCTIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT AND ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+
+ cat("\nINFORMATION CRITERIA:\n")
+ cat("\n")
+ print(round(fitm[,c(1:5)],0))
+
+ cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+ cat("\n")
+ print(round(fitm[,c(6,7)],3))
+}
+
+############################################
+## function plot.stepLCplfm
+#############################################
+
+plot.stepLCplfm<-function(x,which="BIC",...){
+
+ nF<-dim(x)[1]
+ nT<-dim(x)[2]
+ minF<-x[[1,1]]$call$F
+ maxF<-x[[nF,1]]$call$F
+ minT<-x[[1,1]]$call$T
+ maxT<-x[[1,nT]]$call$T
+
+ classlab<-paste("T=", seq(minT,maxT),sep="")
+
+ fitm<-t(sapply(x,function(obj) obj$fitmeasures))
+ colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF")
+
+ minw<-min(fitm[,which])
+ maxw<-max(fitm[,which])
+ mat<-matrix(fitm[,which],ncol=nT)
+ symb<-c(1,19,4,8,17,5,0) 
+ 
+ if ((maxF-minF)>0 & (maxT-minT)>0){
+ par(pty="s")
+ plot(-1,-1,xlim=c(minF,maxF),ylim=c(minw,maxw),xlab="Number of features",ylab=which,type="b",xaxp=c(minF,maxF,maxF-minF),...)
+ for (t in 1:nT){lines(seq(minF,maxF),mat[,t],type="b",pch=symb[t])}
+ if ((which=="VAF")|(which=="Correlation"))legend("bottomright",classlab[1:nT],pch=symb[1:nT],lty=rep(1,nT),border=NULL,x.intersp=1,y.intersp=1,bty="n")
+ else legend("topright",classlab[1:nT],pch=symb[1:nT],lty=rep(1,nT),border=NULL,x.intersp=1,y.intersp=1,bty="n")
+ } ## end((maxF-minF)>0 & (maxT-minT)>0)
+ 
+ else if ((minF==maxF) & (maxT>minT)){
+ par(pty="s")
+ plot(seq(minT,maxT),mat,xlim=c(minT,maxT),ylim=c(minw,maxw),xlab="Number of latent classes",ylab=which,type="b",xaxp=c(minT,maxT,maxT-minT),...)
+ }
+ else if ((maxF>minF) & (maxT==minT)){
+ par(pty="s")
+ plot(seq(minF,maxF),mat,xlim=c(minF,maxF),ylim=c(minw,maxw),xlab="Number of features",ylab=which,type="b",xaxp=c(minF,maxF,maxF-minF),...)
+ }
+ else if  ((maxF==minF) & (maxT==minT)){print("Fitmeasures are only visualized if maxF>minF or maxT>minT")}
+}
+
+#############################################
+## summary stepLCplfm
+#############################################
+
+summary.stepLCplfm<-function(object, ...)
+{
+ nF<-dim(object)[1]
+ nT<-dim(object)[2]
+ minF<-object[[1,1]]$call$F
+ maxF<-object[[nF,1]]$call$F
+ minT<-object[[1,1]]$call$T
+ maxT<-object[[1,nT]]$call$T
+
+ fitm<-t(sapply(object,function(obj) obj$fitmeasures))
+ colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF")
+ 
+ modelnr<-object[[1,1]]$call$model 
+ 
+
+ rowlab<-rep(" ",nT*nF)
+  for (f in minF:maxF){
+   for (t in minT:maxT){
+    r<-f-minF+1    
+    k<-t-minT+1
+    rowlab[(k-1)*nF+r]<-paste("model=",modelnr," F=",f," T=",t,sep="")
+  }}
+ rownames(fitm)<-rowlab
+ result<-fitm
+ class(result)<-"summary.stepLCplfm"
+ result
+}
+
+
+#####################################
+## function print.summary.stepLCplfm
+#####################################
+
+print.summary.stepLCplfm<-function(x,digits=2,...)
+{
+print(x[],digits=digits,...)
+}
 
 
