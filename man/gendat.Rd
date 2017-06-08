@@ -1,10 +1,10 @@
 \name{gendat}
 \alias{gendat}
 \title{Data generation}
-\description{Computation of association probabilities and data generation for disjunctive or conjunctive probabilistic latent feature models.}
+\description{Computation of association probabilities and data generation for disjunctive, conjunctive or additive probabilistic latent feature models.}
 \usage{gendat(maprule="disj", N, objpar, attpar)}
 \arguments{
-  \item{maprule}{Disjunctive (\code{maprule="disj"}) or conjunctive (\code{maprule="conj"}) 
+  \item{maprule}{Disjunctive (\code{maprule="disj"}), conjunctive (\code{maprule="conj"}) or additive (\code{maprule="add"}) 
 	mapping rule of the probabilistic latent feature model.}
   \item{N}{Number of replications for which binary associations are generated.}
   \item{objpar}{True objectparameters. As object parameters are probabilities they should be between 0 and 1.}
@@ -13,7 +13,7 @@
 \details{
  The function \code{gendat} computes for all pairs of \emph{J} objects and \emph{K} attributes association probabilities and it generates 
  association frequencies (i.e. the number of replications \code{N} for which an object is associated to an attribute), 
- according to a disjunctive or a conjunctive probabilistic latent feature model. In addition, the function computes a matrix with in each cell 
+ according to a disjunctive, conjunctive or additive probabilistic latent feature model. In addition, the function computes a matrix with in each cell 
  the total number of replications \code{N}. 
  If the requested number of replications \code{N} equals 0, 
  the function only computes association probabilities and does not generate new data. 
@@ -36,6 +36,11 @@
  For the conjunctive model the association probability in cell \emph{(j,k)} is computed as:
 
 \deqn{p(j,k)=\prod_f(1-(1-objpar[j,f])*attpar[k,f]).}
+
+ The \emph{additive} mapping rule states that an object and attribute are more likely to associated if they have more common features. More specifically, 
+ the association probability for the additive model is computed as
+ \deqn{p(j,k)= (1/F) * \sum_f (objpar[j,f])*attpar[k,f]) }
+
 }
 \value{
 \item{call}{Parameters used to call the function.}
@@ -71,5 +76,9 @@ probconj<-gendat(maprule="conj",N=0,
 
 ## generate data for a disjunctive model using N=200 replications
 gdat<-gendat(maprule="disj",N=200,
+             objpar=objectparameters,attpar=attributeparameters)
+
+## generate data for a additive model using N=200 replications
+gdat<-gendat(maprule="add",N=200,
              objpar=objectparameters,attpar=attributeparameters)
 }

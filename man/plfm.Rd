@@ -3,7 +3,7 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Probabilistic latent feature analysis of two-way two-mode frequency data}
 \description{Computation of parameter estimates, standard errors, criteria for model selection, and goodness-of-fit criteria for 
- disjunctive or conjunctive probabilistic latent feature models with \emph{F} features.}
+ disjunctive, conjunctive or additive probabilistic latent feature models with \emph{F} features.}
 \usage{
 plfm(data,object,attribute,rating,freq1,freqtot,F,
      datatype="freq",maprule="disj",M=5,emcrit1=1e-2,
@@ -23,11 +23,11 @@ plfm(data,object,attribute,rating,freq1,freqtot,F,
   \item{F}{The number of latent features included in the model.}
   \item{datatype}{The type of data used as input. When \code{datatype}="freq" one should specify frequency data \code{freq1} and \code{freqtot}, and when \code{datatype}="dataframe" one should 
                   specify the name of the data frame \code{data}, and its components, \code{object}, \code{attribute} and \code{rating}.}
-  \item{maprule}{Disjunctive (\code{maprule}="disj") or conjunctive (\code{maprule}="conj") mapping rule of the probabilistic latent feature model.}
+  \item{maprule}{Disjunctive (\code{maprule}="disj"),  conjunctive (\code{maprule}="conj") or additive (\code{maprule}="add") mapping rule of the probabilistic latent feature model.}
   \item{M}{The number of times a particular model is estimated using random starting points.}
   \item{emcrit1}{Convergence criterion which indicates when the estimation algorithm should switch from Expectation-Maximization (EM) steps to EM+Newton-Rhapson steps.}
   \item{emcrit2}{Convergence criterion which indicates final convergence to a local maximum.}
-  \item{printrun}{\code{printrun}=TRUE prints the analysis type (disjunctive or conjunctive), the number of features (\emph{F}) and the number of the run to the output screen, whereas 
+  \item{printrun}{\code{printrun}=TRUE prints the analysis type (disjunctive, conjunctive or additive), the number of features (\emph{F}) and the number of the run to the output screen, whereas 
                  \code{printrun}=FALSE suppresses the printing.}
 }
 \details{
@@ -42,7 +42,7 @@ plfm(data,object,attribute,rating,freq1,freqtot,F,
 	The general scheme of the accelerated algorithm is described in Louis (1982) and Tanner (1996). Computational details about implementing the accelerated algorithm 
 	for PLFMs are described in Meulders (2013).
 
-	When using the function \code{\link{plfm}} to estimate a particular PLFM (i.e. with a certain number of latent features and a disjunctive or conjunctive mapping rule), 
+	When using the function \code{\link{plfm}} to estimate a particular PLFM (i.e. with a certain number of latent features and specific mapping rule), 
 	one may locate the distinct posterior mode(s) by running the algorithm \code{M} times using random starting points. The estimated object-and attribute parameters of 
 	each run are stored in the objects \code{objpar.runs} and \code{attpar.runs} of the output list. Next, a number of additional statistics 
 	(estimated object- and attribute parameters, asymptotic standard errors of object- and attribute parameters, model selecion criteria and goodness-of-fit measures) 
@@ -147,12 +147,20 @@ objectparameters<-matrix(runif(J*F),nrow=J)
 attributeparameters<-matrix(runif(K*F),nrow=K)
 
 # generate data for disjunctive model using N=200 replications
-gdat<-gendat(maprule="disj",N=200,
+gdat.disj<-gendat(maprule="disj",N=200,
               objpar=objectparameters,attpar=attributeparameters)
 
 # Estimate a disjunctive probabilistic latent feature model with 2 features
 # suppress printing the type of analysis to the output screen
-disj2<-plfm(maprule="disj",freq1=gdat$freq1,freqtot=200,F=2,M=1,printrun=FALSE)
+disj2<-plfm(maprule="disj",freq1=gdat.disj$freq1,freqtot=200,F=2,M=1,printrun=FALSE)
+
+# generate data for an additive model using N=200 replications
+gdat.add<-gendat(maprule="add",N=200,
+              objpar=objectparameters,attpar=attributeparameters)
+
+# Estimate an additive probabilistic latent feature model with 2 features
+# suppress printing the type of analysis to the output screen
+add2<-plfm(maprule="add",freq1=gdat.add$freq1,freqtot=200,F=2,M=1,printrun=FALSE)
 }
 
 

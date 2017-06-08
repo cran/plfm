@@ -3,12 +3,13 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Latent class probabilistic feature analysis of three-way three-mode binary data}
 \description{Computation of parameter estimates, standard errors, criteria for model selection, and measures of descriptive fit for 
- disjunctive or conjunctive latent class probabilistic  feature models.}
+ disjunctive, conjunctive and additive latent class probabilistic  feature models.}
 \usage{  
 LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
        model=1,start.objectparameters=NULL,start.attributeparameters=NULL,
        start.sizeparameters=NULL,delta=0.0001,printrun=FALSE,
-       update.objectparameters=NULL,update.attributeparameters=NULL)
+       update.objectparameters=NULL,update.attributeparameters=NULL,
+       Nbootstrap=2000)
 }
 \arguments{
   \item{data}{A \emph{I X J X K} data array of binary observations. Observation \emph{(i,j,k)} \emph{(i=1,..,I; j=1,..,J; k=1,..,K)}  indicates 
@@ -16,7 +17,7 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
   \item{F}{The number of latent features included in the model.}
   \item{T}{The number of latent classes included in the model.}
   \item{M}{The number of times a particular model is estimated using random starting points.}
-  \item{maprule}{Disjunctive (\code{maprule}="disj") or conjunctive (\code{maprule}="conj") mapping rule of the probabilistic latent feature model.}
+  \item{maprule}{Disjunctive (\code{maprule}="disj"), conjunctive (\code{maprule}="conj") or additive (\code{maprule}="add") mapping rule of the probabilistic latent feature model.}
   \item{emcrit1}{Convergence criterion to be used for the estimation of candidate models.}
   \item{emcrit2}{Convergence criterion to be used for the estimation of the best model.}
   \item{model}{The type of dependency and heterogeneity assumption included in the model. \code{model}=1, \code{model}=2, \code{model}=3 represent models with a constant 
@@ -38,7 +39,7 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
                               If \code{start.sizeparameters=NULL} randomly  generated class size parameters are used 
                               as starting values.}
   \item{delta}{The precision used to compute standard errors of the parameters with the method of finite differences.}
-  \item{printrun}{\code{printrun}=TRUE prints the analysis type (disjunctive or conjunctive), the number of features (\emph{F}), the number of latent classes (\emph{T}) 
+  \item{printrun}{\code{printrun}=TRUE prints the analysis type (disjunctive, conjunctive, additive), the number of features (\emph{F}), the number of latent classes (\emph{T}) 
                   and the number of the run to the output screen, whereas \code{printrun}=FALSE suppresses the printing.}
   \item{update.objectparameters}{A binary valued array that indicates for each object parameter whether it has to be 	estimated 
                                  from the data or constrained to the starting value. A value of 1 means that the corresponding object parameter is estimated and 
@@ -50,6 +51,7 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
                                  a value of 0 means that the corresponding attribute parameter is constrained to the starting value provided by the user.
                                  The size of the array equals \emph{K x F x T}  when \code{model = 2,5,3,6} and \emph{K x F} when \code{model = 1,3}.  
                                  If \code{update.attributeparameters} \code{= NULL} all attribute parameters are estimated from the data.}
+  \item{Nbootstrap}{Number of bootstrap iterations to be used for simulating the reference distribution of odds-ratio dependency measures.}
 
 }
 \details{
@@ -59,7 +61,7 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
       the best solution  among the \code{M} runs (i.e., with the highest posterior density) is used as the starting point of the EM algorithm for conducting a final analysis. The final 
       analysis is terminated if the convergence criterion \code{emcrit2} is smaller than the convergence criterion. 
 
-\emph{Model selection criteria and goodness-of-fit measures}
+\emph{Model selection criteria, goodness-of-fit and statistical dependency measures}
 
         To choose among models with different numbers of features, or with different mapping rules, 
 	one may use information criteria such as the Akaike Information Criterion (AIC, Akaike, 1973, 1974),
@@ -68,12 +70,29 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
 	for which object-attribute associations are collected. \emph{Npar} represents the number of model parameters.
 	Models with the lowest value for AIC or BIC should be selected.
 	
-	The descriptive fit of the model is assessed with the correlation between observed and expected frequencies in the \emph{J X K} table, 
+	The descriptive goodness-of-fit of the model is assessed with the correlation between observed and expected frequencies in the \emph{J X K} table, 
 	and the proportion of the variance in the observed frequencies accounted for by the model (VAF)
 	(i.e. the squared correlation between observed and expected frequencies).
+        
+        To assess to which extent the model can capture observed statistical dependencies between object-attribute pairs with a common object or attribute, a parametric 
+        bootstrap procedure is used to evaluate whether observed dependencies are within the simulated 95 or 99 percent confidence interval. Let \emph{D(i,j,k)} be equal to 1 if rater i
+        indicates that object \emph{j} is associated to attribute \emph{k}. The statistical dependency between pairs \emph{(j,k)} and \emph{(j*,k*)} is measured with the odds ratio (OR) statistic: 
 
-	The model selection criteria AIC and BIC, and the descriptive fit measures (correlation observed and expected frequencies, and VAF) 
-        are stored in the object \code{fitmeasures} of the output list
+       \deqn{ OR(j,k,j*,k*)=log((N11*N00)/(N10*N01))}
+
+        with 
+        
+             \deqn{N11=\sum_i D(i,j,k) D(i,j*,k*) +0.5 }
+ 
+             \deqn{N00=\sum_i (1-D(i,j,k)) (1-D(i,j*,k*)) +0.5 } 
+
+             \deqn{N10=\sum_i D(i,j,k) (1-D(i,j*,k*)) +0.5 }
+   
+             \deqn{N01=\sum_i (1-D(i,j,k)) D(i,j*,k*) +0.5 }
+
+
+	The model selection criteria AIC and BIC, the descriptive goodness-of-fit measures  (correlation observed and expected frequencies, and VAF) and a summary of the OR dependency measures 
+       (i.e., proportion of observed OR dependencies of a certain type that are in the simulated 95 or 99 percent confidence interval) are stored in the object \code{fitmeasures} of the output list
 
 }
 \value{
@@ -89,10 +108,14 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
 \item{gradient.objpar}{Gradient of the object parameters for the best model.}
 \item{gradient.attpar}{Gradient of the attribute parameters for the best model.}
 \item{gradient.sizepar}{Gradient of the class size parameters for the best model.}
-\item{fitmeasures}{A list of model selection criteria and goodness-of-fit criteria for the model with the highest posterior density.}
+\item{fitmeasures}{A list of model selection criteria, goodness-of-fit measures and OR dependency measures for the model with the highest posterior density.}
 \item{postprob}{A \emph{I X T} matrix of posterior probabilities for the best model.}
 \item{margprob.JK}{A \emph{J X K} matrix of marginal object-attribute association probabilities.}
 \item{condprob.JKT}{A \emph{J X K X T} array of conditional object-attribute association probabilities (i.e., probability of object-attribute association given latent class membership).}
+\item{report.OR.attpair}{A matrix that contains for all attribute pairs per object the observed OR dependency (OR.obs), the expected OR dependency (OR.mean) 
+      and the upper and lower bounds of the corresponding simulated 95 and 99 percent confidence interval (OR.p025, OR.p975, OR.p005, OR.p995).}
+\item{report.OR.objpair}{{A matrix that contains for all object pairs per attribute the observed OR dependency (OR.obs), the expected OR dependency (OR.mean) 
+      and the upper and lower bounds of the corresponding simulated 95 and 99 percent confidence interval (OR.p025, OR.p975, OR.p005, OR.p995).}}
 }
 \references{
 
@@ -160,10 +183,20 @@ data(anger)
 # assume constant situation-feature classification
 # and class-specific situation parameters (i.e. model 1)
 # use 10 exploratory runs with random starting points 
-anger.LCplfm<-LCplfm(data=anger$data,F=2, T=2, M=10)
+anger.LCplfm.disj<-LCplfm(data=anger$data,F=2, T=2, M=10)
 
 # print the output of the model 
-print (anger.LCplfm)
+print (anger.LCplfm.disj)
+
+
+# estimate an additive LCplfm model with F=2 and T=2 
+# assume constant situation-feature classification
+# and class-specific situation parameters (i.e. model 1)
+# use 10 exploratory runs with random starting points 
+anger.LCplfm.add<-LCplfm(data=anger$data,F=2, T=2, M=10, maprule="add")
+
+# print the output of the model 
+print (anger.LCplfm.add)
 
 
 # estimate a disjunctive LCplfm model with F=4 and T=2
@@ -230,10 +263,20 @@ data(car)
 # assume constant attribute-feature classification
 # and class-specific car parameters (i.e. model 4)
 # use 10 exploratory runs with random starting points 
-car.LCplfm<-LCplfm(data=car$data3w,F=3, T=2, M=10,model=4)
+car.LCplfm.disj<-LCplfm(data=car$data3w,F=3, T=2, M=10,model=4)
 
 # print the output of the model 
-print(car.LCplfm)
+print(car.LCplfm.disj)
+
+# estimate an additive LCplfm with F=3 and T=2
+# assume constant attribute-feature classification
+# and class-specific car parameters (i.e. model 4)
+# use 10 exploratory runs with random starting points 
+car.LCplfm.add<-LCplfm(data=car$data3w,F=3, T=2, M=10, model=4, maprule="add")
+
+# print the output of the model 
+print(car.LCplfm.add)
+
 }
 
 \dontrun{

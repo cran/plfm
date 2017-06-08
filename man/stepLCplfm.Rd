@@ -2,12 +2,12 @@
 \alias{stepLCplfm}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{Latent class probabilistic latent feature analysis of three-way three-mode binary data}
-\description{The function \code{\link{stepLCplfm}} subsequently applies the \code{\link{LCplfm}} function to fit disjunctive and/or conjunctive models with \emph{minF} up to \emph{maxF} 
+\description{The function \code{\link{stepLCplfm}} subsequently applies the \code{\link{LCplfm}} function to fit disjunctive, conjunctive or additive models with \emph{minF} up to \emph{maxF} 
 latent features and \emph{minT} to \emph{maxT} latent classes. The results of the estimated models are stored in a list with \emph{F X T} components.}  
 \usage{
 	stepLCplfm(minF=1,maxF=3,minT=1,maxT=3,
                    data,maprule="disj",M=5,emcrit1=1e-3,emcrit2=1e-8,
-                   model=1,delta=0.0001,printrun=FALSE)
+                   model=1,delta=0.0001,printrun=FALSE,Nbootstrap=2000)
 }
 \arguments{
   \item{minF}{Minimum number of latent features included in the model.}
@@ -16,7 +16,7 @@ latent features and \emph{minT} to \emph{maxT} latent classes. The results of th
   \item{maxT}{Maximum number of latent classes included in the model.}
   \item{data}{A \emph{I X J X K} data array of binary observations. Observation \emph{(i,j,k)} \emph{(i=1,..,I; j=1,..,J; k=1,..,K)}  indicates 
                whether object \emph{j} is associated to attribute \emph{k} according to rater \emph{i}.} 
-  \item{maprule}{Fit disjunctive models (\code{maprule}="disj") or conjunctive models (\code{maprule}="conj").}
+  \item{maprule}{Fit disjunctive models (\code{maprule}="disj"), conjunctive models (\code{maprule}="conj") or additive models (\code{maprule}="add") .}
   \item{M}{The number of exploratory runs of the EM algorithm using random starting points for each model.}
   \item{emcrit1}{Convergence criterion to be used for the estimation of candidate models in the exploration step.}
   \item{emcrit2}{Convergence criterion to be used for the estimation of the best model in the final analysis.}
@@ -28,6 +28,7 @@ latent features and \emph{minT} to \emph{maxT} latent classes. The results of th
   \item{delta}{The precision used to compute standard errors of the model parameters with the method of finite differences.}
   \item{printrun}{\code{printrun}=TRUE prints the analysis type (disjunctive or conjunctive), the number of features (\emph{F}), the number of latent classes (\emph{T}) 
                   and the number of the run to the output screen, whereas \code{printrun}=FALSE suppresses the printing.}
+  \item{Nbootstrap}{Number of bootstrap iterations to be used for simulating the reference distribution of odds-ratio dependency measures.}
 }
 
 \details{The results of subsequent \code{\link{LCplfm}} analyses are stored in a matrix of lists with \code{(maxF-minF+1,maxT-minT+1)} components.} 

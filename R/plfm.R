@@ -19,6 +19,14 @@ for (f in 1:F) {prob<-prob*(1-(1-objpar[,f])%o%attpar[,f])}
 pconj<-prob
 }
 
+## function probability additive model
+
+padd<-function(F,objpar,attpar){
+prob<-matrix(rep(0,J*K),nrow=J)
+for (f in 1:F) {prob<-prob+(objpar[,f]%o%attpar[,f])}
+padd<-prob/F
+}
+
 J<-dim(objpar)[1]
 F<-dim(objpar)[2]
 K<-dim(attpar)[1]
@@ -27,17 +35,20 @@ K<-dim(attpar)[1]
 if ((dim(objpar)[2]!=dim(attpar)[2])) print("Number of columns in matrix of object parameters and matrix of attribute parameters should be the same")
 else if (sum((objpar<0)|(objpar>1)|is.nan(objpar))>0) print("Object parameters should all be non-missing and between 0 and 1")
 else if (sum((attpar<0)|(attpar>1)|is.nan(attpar))>0) print("Attribute parameters should all be between 0 and 1")
-else if ((maprule!="disj")&(maprule!="conj")) print("Incorrect specification of mapping rule")
+else if ((maprule!="disj")&(maprule!="conj")&(maprule!="add")) print("Incorrect specification of mapping rule")
 else if (N<0) print("The number of replications should be positive (N>0)")
 else if (N==0)
 {
 if (maprule=="disj") prob1<-pdisj(F,objpar,attpar)
 else if (maprule=="conj") prob1<-pconj(F,objpar,attpar)
+else if (maprule=="add") prob1<-padd(F,objpar,attpar)
 gendat<-list(call=match.call(),prob1=prob1)
 }
 else if (N>0){
 if (maprule=="disj") prob1<-pdisj(F,objpar,attpar)
 else if (maprule=="conj") prob1<-pconj(F,objpar,attpar)
+else if (maprule=="add") prob1<-padd(F,objpar,attpar)
+
 freqtot<-matrix(rep(N,J*K),nrow=J)
 freq1<-matrix(rbinom(J*K,N,prob1),nrow=J)
 gendat<-list(call=match.call(),prob1=prob1,freq1=freq1,freqtot=freqtot)
@@ -57,10 +68,16 @@ plfm<-function(data,object,attribute,rating,freq1,freqtot,F,datatype="freq",mapr
 #### functions
 
 
-pi<-function(J,K,F,sigma,rho){
+piDC<-function(J,K,F,sigma,rho){
 prob<-matrix(rep(1,J*K),nrow=J)
 for (f in 1:F) {prob<-prob*(1-sigma[,f]%o%rho[,f])}
-pi<-1-prob
+piDC<-1-prob
+}
+
+piADD<-function(J,K,F,sigma,rho){
+prob<-matrix(rep(0,J*K),nrow=J)
+for (f in 1:F) {prob<-prob+(sigma[,f]%o%rho[,f])}
+piADD<-prob/F
 }
 
 logpost<-function(p1,sigma,rho,freq1,freq0){
@@ -71,7 +88,7 @@ loglik<-function(p1,freq1,freq0){
 loglik<-sum(freq1*log(p1)+freq0*log(1-p1))
 }
 
-computeHessian<-function(sigma.o,rho.o,psi,nsigma.o,nrho.o,nfreq1,nfreq0,np1.o,freq1mat,pi1mat,J,K,F,NPsigma,NPtot){
+computeHessianDC<-function(sigma.o,rho.o,psi,nsigma.o,nrho.o,nfreq1,nfreq0,np1.o,freq1mat,pi1mat,J,K,F,NPsigma,NPtot){
   ## Hsigma
   
   Hsigma<-1/sigma.o**2+1/((1-sigma.o)**2)+apply((nrho.o/(1-psi))**2*(nfreq1*((1-np1.o)/np1.o)**2+nfreq0),c(1,3),sum)  
@@ -179,7 +196,7 @@ computeHessian<-function(sigma.o,rho.o,psi,nsigma.o,nrho.o,nfreq1,nfreq0,np1.o,f
    Hessian[1:NPsigma,(NPsigma+1):NPtot]<-Hesmat.sigmarho  
    Hessian[((NPsigma+1):NPtot),1:NPsigma]<-t(Hesmat.sigmarho)
    Hessian[(NPsigma+1):NPtot,(NPsigma+1):NPtot]<-Hesmat.rho
-   computeHessian<-Hessian
+   computeHessianDC<-Hessian
 
 }
 
@@ -201,13 +218,15 @@ if (sum(is.nan(freq1)|is.na(freq1)|freq1<0)){print("The elements of the matrix f
 else if (sum(is.nan(freqtot)|is.na(freqtot)|freqtot<1)){print("The elements of the matrix freqtot should be non-missing and larger than 0")}
 else if (sum(abs(dim(freqtot)-dim(freq1)))>0){print("The matrices freq1 and freqtot should have the same dimensionality")}
 else if (sum(freq1>freqtot)>0) {print("The corresponding values of the matrix freqtot should be larger than or equal to the elements in the matrix freq1")}
-else if ((maprule!="disj") & (maprule!="conj")) {print("The mapping rule is not correctly specified")}
+else if ((maprule!="disj") & (maprule!="conj") & (maprule!="add")) {print("The mapping rule is not correctly specified")}
 else if (M<1) {print("The number of requested runs should be at least one (M>=1)")}
 else if (((dim(freq1)[1])*(dim(freq1)[2]))<F*sum(dim(freq1))) {print("The number of model parameters (J+K)*F should be smaller than the number of observations J*K used to fit the model")}
 else if (emcrit1<0 | emcrit2<0) {print("emcrit1 and emcrit2 should be small positive numbers")}
 
 
 else{
+
+if (maprule=="disj"|maprule=="conj"){
 
 ## initialisation
 
@@ -273,8 +292,8 @@ rho.o<-matrix(runif(K*F),nrow=K,byrow=TRUE)
 rho.n<-matrix(runif(K*F),nrow=K,byrow=TRUE)
 theta.o<-c(t(sigma.o),t(rho.o))
 theta.n<-c(t(sigma.n),t(rho.n))
-p1.o<-pi(J,K,F,sigma.o,rho.o)
-p1.n<-pi(J,K,F,sigma.n,rho.n)
+p1.o<-piDC(J,K,F,sigma.o,rho.o)
+p1.n<-piDC(J,K,F,sigma.n,rho.n)
 logpost.o<-logpost(p1.o,sigma.o,rho.o,freq1,freq0)
 logpost.n<-logpost(p1.n,sigma.n,rho.n,freq1,freq0)
 
@@ -288,7 +307,7 @@ while ((abs(logpost.o-logpost.n))>emcrit2){
   nsigma.o<-aperm(sigma.o%o%rep(1,K),c(1,3,2))
   theta.o<-c(t(sigma.o),t(rho.o))
 
-  p1.o<-pi(J,K,F,sigma.o,rho.o)
+  p1.o<-piDC(J,K,F,sigma.o,rho.o)
   np1.o<-p1.o%o%rep(1,F)
   pi1mat<-np1.o%o%rep(1,F)
 
@@ -302,7 +321,7 @@ while ((abs(logpost.o-logpost.n))>emcrit2){
   alfa<-eps/(1-psi)
   sigma.n<-(1+apply(nfreq1*(1-gamma)*psi*(1/np1.o)+nfreqtot*gamma,c(1,3),sum))/(2+margobj)
   rho.n<-(1+apply(nfreq1*(1-alfa)*psi*(1/np1.o)+nfreqtot*alfa,c(2,3),sum))/(2+margatt)
-  p1.n<-pi(J,K,F,sigma.n,rho.n)
+  p1.n<-piDC(J,K,F,sigma.n,rho.n)
   logpost.n<-logpost(p1.n,sigma.n,rho.n,freq1,freq0)
 
  while ((flagNR==0) & (abs(logpost.o-logpost.n)<emcritX) & (abs(logpost.o-logpost.n)>emcrit2)){
@@ -318,7 +337,7 @@ while ((abs(logpost.o-logpost.n))>emcrit2){
   nsigma.o<-aperm(sigma.o%o%rep(1,K),c(1,3,2))
   theta.o<-c(t(sigma.o),t(rho.o))
 
-  p1.o<-pi(J,K,F,sigma.o,rho.o)
+  p1.o<-piDC(J,K,F,sigma.o,rho.o)
   np1.o<-p1.o%o%rep(1,F)
   pi1mat<-np1.o%o%rep(1,F)
 
@@ -352,7 +371,7 @@ while ((abs(logpost.o-logpost.n))>emcrit2){
   ##compute Hessian
 
 
-  completeHessian<-computeHessian(sigma.o,rho.o,psi,nsigma.o,nrho.o,nfreq1,nfreq0,np1.o,freq1mat,pi1mat,J,K,F,NPsigma,NPtot)
+  completeHessian<-computeHessianDC(sigma.o,rho.o,psi,nsigma.o,nrho.o,nfreq1,nfreq0,np1.o,freq1mat,pi1mat,J,K,F,NPsigma,NPtot)
   
 
   ##compute acceleration step
@@ -375,7 +394,7 @@ while ((abs(logpost.o-logpost.n))>emcrit2){
   }
   
   
-  p1.n<-pi(J,K,F,sigma.n,rho.n)
+  p1.n<-piDC(J,K,F,sigma.n,rho.n)
   logpost.n<-logpost(p1.n,sigma.n,rho.n,freq1,freq0)
   
   
@@ -409,7 +428,7 @@ colnames(sigma.best)<-featurelabels
 rho.best<-as.matrix(rho.runs[,,best])
 rownames(rho.best)<-columnlabels
 colnames(rho.best)<-featurelabels
-p1.best<-pi(J,K,F,sigma.best,rho.best)
+p1.best<-piDC(J,K,F,sigma.best,rho.best)
 rownames(p1.best)<-rowlabels
 colnames(p1.best)<-columnlabels
 np1.best<-p1.best%o%rep(1,F)
@@ -431,7 +450,7 @@ gradrho<-1/rho.best-1/(1-rho.best)+apply(((nsigma.best)/(1-psi))*(nfreq1*(1-np1.
 ##compute Hessian best solution
 
 
-completeHessian<-computeHessian(sigma.best,rho.best,psi,nsigma.best,nrho.best,nfreq1,nfreq0,np1.best,freq1mat,pi1mat.best,J,K,F,NPsigma,NPtot)
+completeHessian<-computeHessianDC(sigma.best,rho.best,psi,nsigma.best,nrho.best,nfreq1,nfreq0,np1.best,freq1mat,pi1mat.best,J,K,F,NPsigma,NPtot)
 SEsigma<-1/sqrt(matrix(diag(completeHessian)[1:NPsigma],nrow=J,byrow=TRUE))
 rownames(SEsigma)<-rowlabels
 colnames(SEsigma)<-featurelabels
@@ -459,13 +478,180 @@ pchi<-1-pchisq(chisquare.fit,df)
 fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,chisquare.fit,df,pchi,correlation,VAF),ncol=1)
 rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Pearson Chi-square","df","p-value","Correlation observed and expected frequencies","VAF observed frequencies")
 
-if (maprule=="disj")
+}#end disjunctive and conjunctive rule 
+
+else if (maprule=="add"){
+
+## initialisation
+
+N<-max(freqtot)
+J<-dim(freq1)[1]
+K<-dim(freq1)[2]
+freq0<-freqtot-freq1
+
+if (is.null(rownames(freq1))=="FALSE") rowlabels<-rownames(freq1) else rowlabels<-paste("R_", seq(1,J),sep="")
+if (is.null(colnames(freq1))=="FALSE") columnlabels<-colnames(freq1) else columnlabels<-paste("C_", seq(1,K),sep="")
+
+if (maprule=="conj"){
+freq0<-freq1
+freq1<-freqtot-freq0
+}
+
+
+NPsigma<-J*F
+NPrho<-K*F
+NPtot<-J*F+K*F
+
+featurelabels<-paste("F",seq(1,F),sep="")
+runlabels<-paste("RUN",seq(1,M),sep="")
+
+nfreq1<-freq1%o%rep(1,F)
+nfreq0<-freq0%o%rep(1,F)
+nfreqtot<-freqtot%o%rep(1,F)
+freq1mat<-(freq1%o%rep(1,F))%o%rep(1,F)
+
+margobj<-apply(freqtot,1,sum)%o%rep(1,F)
+margatt<-apply(freqtot,2,sum)%o%rep(1,F)
+
+psi<-array(rep(0,J*K*F),c(J,K,F))
+ksi<-array(rep(0,J*K*F),c(J,K,F))
+eps<-array(rep(0,J*K*F),c(J,K,F))
+
+sigma.runs<-array(rep(0,J*F*M),c(J,F,M))
+rho.runs<-array(rep(0,K*F*M),c(K,F,M))
+logpost.runs<-rep(0,M)
+
+dimnames(sigma.runs)[[1]]<-rowlabels
+dimnames(sigma.runs)[[2]]<-featurelabels
+dimnames(sigma.runs)[[3]]<-runlabels
+dimnames(rho.runs)[[1]]<-columnlabels
+dimnames(rho.runs)[[2]]<-featurelabels
+dimnames(rho.runs)[[3]]<-runlabels
+names(logpost.runs)<-runlabels
+
+for (run in 1:M){
+
+## initialisation starting values
+
+sigma.o<-matrix(runif(J*F),nrow=J,byrow=TRUE)
+sigma.n<-matrix(runif(J*F),nrow=J,byrow=TRUE)
+rho.o<-matrix(runif(K*F),nrow=K,byrow=TRUE)
+rho.n<-matrix(runif(K*F),nrow=K,byrow=TRUE)
+p1.o<-piADD(J,K,F,sigma.o,rho.o)
+p1.n<-piADD(J,K,F,sigma.n,rho.n)
+logpost.o<-logpost(p1.o,sigma.o,rho.o,freq1,freq0)
+logpost.n<-logpost(p1.n,sigma.n,rho.n,freq1,freq0)
+
+
+while ((abs(logpost.o-logpost.n))>emcrit2){
+  
+ sigma.o<-sigma.n
+ rho.o<-rho.n
+ p1.o<-p1.n
+ logpost.o<-logpost.n
+
+ psi<-array(rep(0,J*K*F),c(J,K,F))
+ ksi<-array(rep(0,J*K*F),c(J,K,F))
+ eps<-array(rep(0,J*K*F),c(J,K,F))
+
+ for (f in 1:F){psi[,,f]<-sigma.o[,f]%o%rho.o[,f]}
+ for (f in 1:F){ksi[,,f]<-sigma.o[,f]%o%(1-rho.o[,f])}
+ for (f in 1:F){eps[,,f]<-(1-sigma.o[,f])%o%(rho.o[,f])}
+
+ np1.o<-p1.o%o%rep(1,F)
+
+ px0<-array(rep(0,J*K*F),c(J,K,F))
+ px1<-array(rep(0,J*K*F),c(J,K,F))
+ py0<-array(rep(0,J*K*F),c(J,K,F))
+ py1<-array(rep(0,J*K*F),c(J,K,F))
+
+ px0<-((F-(1+F*np1.o-psi))*psi+(F-(F*np1.o-psi))*ksi)/(F*(1-np1.o))
+ px1<-((1+F*np1.o-psi)*psi+(F*np1.o-psi)*ksi)/(F*np1.o)
+ py0<-((F-(1+F*np1.o-psi))*psi+(F-(F*np1.o-psi))*eps)/(F*(1-np1.o))
+ py1<-((1+F*np1.o-psi)*psi+(F*np1.o-psi)*eps)/(F*np1.o)
+
+ sigma.n<-(1+apply(nfreq1*px1+nfreq0*px0,c(1,3),sum))/(margobj+2)
+ rho.n<-(1+apply(nfreq1*py1+nfreq0*py0,c(2,3),sum))/(margatt+2)
+
+ p1.n<-piADD(J,K,F,sigma.n,rho.n)
+ logpost.n<-logpost(p1.n,sigma.n,rho.n,freq1,freq0)
+
+ sigma.runs[,,run]<-sigma.n
+ rho.runs[,,run]<-rho.n
+ logpost.runs[run]<-logpost.n
+ }
+
+ if (printrun=="TRUE"){print(paste("ADDITIVE ANALYSIS  ","F=",F,"  RUN=",run,sep=""),quote="FALSE")} 
+
+ 
+}## end M
+
+
+
+### select best solution
+
+
+## select best solution and compute fit measures
+best<-order(logpost.runs,decreasing=TRUE)[1]
+sigma.best<-as.matrix(sigma.runs[,,best])
+rownames(sigma.best)<-rowlabels
+colnames(sigma.best)<-featurelabels
+rho.best<-as.matrix(rho.runs[,,best])
+rownames(rho.best)<-columnlabels
+colnames(rho.best)<-featurelabels
+p1.best<-piADD(J,K,F,sigma.best,rho.best)
+rownames(p1.best)<-rowlabels
+colnames(p1.best)<-columnlabels
+np1.best<-p1.best%o%rep(1,F)
+nrho.best<-rep(1,J)%o%rho.best
+nsigma.best<-aperm(sigma.best%o%rep(1,K),c(1,3,2))
+
+
+
+## computation gradient final solution
+
+## gradient observed posterior
+gradsigma<-1/sigma.best-1/(1-sigma.best)+apply((nfreq1*nrho.best)/(F*np1.best)-(nfreq0*nrho.best)/(F*(1-np1.best)),c(1,3),sum)
+gradrho<-1/rho.best-1/(1-rho.best)+apply((nfreq1*nsigma.best)/(F*np1.best)-(nfreq0*nsigma.best)/(F*(1-np1.best)),c(2,3),sum)
+
+
+##compute standard error
+
+SEsigma<-1/(sigma.best^2)+1/((1-sigma.best)^2)+ apply(nfreq1*(nrho.best/(F*np1.best))^2+nfreq0*(nrho.best/(F*(1-np1.best)))^2,c(1,3),sum)
+SEsigma<-1/sqrt(SEsigma)
+rownames(SEsigma)<-rowlabels
+colnames(SEsigma)<-featurelabels
+
+SErho<-1/(rho.best^2)+1/((1-rho.best)^2)+ apply(nfreq1*(nsigma.best/(F*np1.best))^2+nfreq0*(nsigma.best/(F*(1-np1.best)))^2,c(2,3),sum)
+SErho<-1/sqrt(SErho)
+rownames(SErho)<-columnlabels
+colnames(SErho)<-featurelabels
+
+
+## compute fit measures
+
+
+loglik.best<-loglik(p1.best,freq1,freq0)
+logpost.best<-logpost(p1.best,sigma.best,rho.best,freq1,freq0)
+correlation<-cor(c(p1.best*freqtot),c(freq1))
+VAF<-correlation**2
+deviance<--2*loglik.best
+AIC<-deviance+2*NPtot
+BIC<-deviance+NPtot*log(N)
+chisquare.fit<-sum(((freq1-freqtot*p1.best)**2/(freqtot*p1.best*(1-p1.best))))
+df<-(J*K)-(J+K)*F
+pchi<-1-pchisq(chisquare.fit,df)
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,chisquare.fit,df,pchi,correlation,VAF),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Pearson Chi-square","df","p-value","Correlation observed and expected frequencies","VAF observed frequencies")
+
+
+}# end additive maprule
+
+if (maprule=="disj"|maprule=="add")
 plfm<-list(call=match.call(),objpar=sigma.best,attpar=rho.best,fitmeasures=fitmeasures,logpost.runs=logpost.runs,objpar.runs=sigma.runs,attpar.runs=rho.runs,bestsolution=best,gradient.objpar=gradsigma,gradient.attpar=gradrho,SE.objpar=SEsigma,SE.attpar=SErho,prob1=p1.best)
 
 else if (maprule=="conj")
-
 plfm<-list(call=match.call(),objpar=1-sigma.best,attpar=rho.best,fitmeasures=fitmeasures,logpost.runs=logpost.runs,objpar.runs=1-sigma.runs,attpar.runs=rho.runs,bestsolution=best,gradient.objpar=gradsigma,gradient.attpar=gradrho,SE.objpar=SEsigma,SE.attpar=SErho,prob1=1-p1.best)
-
 
 class(plfm)<-"plfm"
 plfm
@@ -643,7 +829,10 @@ stepplfm<-function(minF,maxF,data,object,attribute,rating,freq1,freqtot,datatype
 
 tempcall<-match.call()
 tempcall<-tempcall[c(-2,-3)]
-if (maprule=="disj") tempcall$maprule<-"disj" else tempcall$maprule<-"conj"
+if (maprule=="disj") tempcall$maprule<-"disj" 
+else if (maprule=="conj") tempcall$maprule<-"conj"
+else if (maprule=="add") tempcall$maprule<-"add"
+
 
 if (maprule=="disj"){
       stepplfm<-vector(mode="list",maxF-minF+1)        
@@ -652,7 +841,6 @@ if (maprule=="disj"){
        tempcall$F<-as.numeric(f)
        stepplfm[[f-minF+1]]$call<-tempcall
       }
-
  }     
 
 else if (maprule=="conj"){
@@ -663,8 +851,17 @@ else if (maprule=="conj"){
        stepplfm[[f-minF+1]]$call<-tempcall
 
       }
+ } 
 
- }  
+else if (maprule=="add"){
+      stepplfm<-vector(mode="list",maxF-minF+1)          
+	for (f in (minF:maxF)){
+       stepplfm[[f-minF+1]]<-plfm(maprule="add",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+       stepplfm[[f-minF+1]]$call<-tempcall
+      }
+ }
+ 
 else if (maprule=="disj/conj"){
 	
       stepdisj<-vector(mode="list",maxF-minF+1)
@@ -678,11 +875,72 @@ else if (maprule=="disj/conj"){
        stepconj[[f-minF+1]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
        tempcall$F<-as.numeric(f)
       stepconj[[f-minF+1]]$call<-tempcall
-
       }
-
 	stepplfm<-list(disj=stepdisj,conj=stepconj)
 }
+
+
+else if (maprule=="disj/add"){
+	
+      stepdisj<-vector(mode="list",maxF-minF+1)
+      stepadd<-vector(mode="list",maxF-minF+1)          
+	for (f in (minF:maxF)){
+       stepdisj[[f-minF+1]]<-plfm(maprule="disj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepdisj[[f-minF+1]]$call<-tempcall
+      }
+      for (f in (minF:maxF)){
+       stepadd[[f-minF+1]]<-plfm(maprule="add",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepadd[[f-minF+1]]$call<-tempcall
+      }
+	stepplfm<-list(disj=stepdisj,add=stepadd)
+}
+
+else if (maprule=="conj/add"){
+	
+      stepadd<-vector(mode="list",maxF-minF+1)
+      stepconj<-vector(mode="list",maxF-minF+1)          
+	for (f in (minF:maxF)){
+       stepadd[[f-minF+1]]<-plfm(maprule="add",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepadd[[f-minF+1]]$call<-tempcall
+      }
+      for (f in (minF:maxF)){
+       stepconj[[f-minF+1]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepconj[[f-minF+1]]$call<-tempcall
+      }
+	stepplfm<-list(conj=stepconj,add=stepadd)
+}
+
+
+else if (maprule=="disj/conj/add"){
+	
+      stepdisj<-vector(mode="list",maxF-minF+1)
+      stepconj<-vector(mode="list",maxF-minF+1)
+      stepadd<-vector(mode="list",maxF-minF+1)
+          
+	for (f in (minF:maxF)){
+       stepdisj[[f-minF+1]]<-plfm(maprule="disj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepdisj[[f-minF+1]]$call<-tempcall
+      }
+      for (f in (minF:maxF)){
+       stepconj[[f-minF+1]]<-plfm(maprule="conj",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepconj[[f-minF+1]]$call<-tempcall
+      }
+      for (f in (minF:maxF)){
+       stepadd[[f-minF+1]]<-plfm(maprule="add",data=data,object=object,attribute=attribute,rating=rating,freq1=freq1,freqtot=freqtot,datatype=datatype,F=f,M=M,emcrit1=emcrit1,emcrit2=emcrit2,printrun=printrun)
+       tempcall$F<-as.numeric(f)
+      stepadd[[f-minF+1]]$call<-tempcall
+      }
+	stepplfm<-list(disj=stepdisj,conj=stepconj,add=stepadd)
+}
+
+
+
 class(stepplfm)<-"stepplfm"
 stepplfm
 }
@@ -695,7 +953,7 @@ stepplfm
 
 print.stepplfm<-function(x, ...)
 {
-if ((length(x$disj)==0)&(length(x$conj)==0)){
+if ((length(x$disj)==0)&(length(x$conj)==0)&(length(x$add)==0)){
 	nfeat<-length(x)
 	minfeat<-dim(x[[1]]$objpar)[2]
 	maxfeat<-dim(x[[nfeat]]$objpar)[2]
@@ -713,6 +971,13 @@ if ((length(x$disj)==0)&(length(x$conj)==0)){
      		cat("\nCONJUNCTIVE MODEL\n")
      		cat("*********************************\n") 
 		}
+
+     else if (x[[1]]$call$maprule=="add"){
+		cat("\n*********************************") 
+     		cat("\nADDITIVE MODEL\n")
+     		cat("*********************************\n") 
+		}
+
 	cat("\nINFORMATION CRITERIA:\n")
       cat("\n")
 	print(round(fitm[,c(1:5)],0))
@@ -726,7 +991,8 @@ if ((length(x$disj)==0)&(length(x$conj)==0)){
       cat("\n")
 	print(round(fitm[,c(9,10)],3))
 	}
-else if ((length(x$disj)>0)&(length(x$conj)>0)){
+
+else if ((length(x$disj)>0)&(length(x$conj)>0)&(length(x$add)==0)){
 	nfeat<-length(x$disj)
       minfeat<-dim(x$disj[[1]]$objpar)[2]
       maxfeat<-dim(x$disj[[nfeat]]$objpar)[2]
@@ -768,9 +1034,166 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
 	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
       cat("\n")
 	print(round(fitconj[,c(9,10)],3))
-
-
 }
+
+else if ((length(x$disj)>0)&(length(x$add)>0)&(length(x$conj)==0)){
+	nfeat<-length(x$disj)
+      minfeat<-dim(x$disj[[1]]$objpar)[2]
+      maxfeat<-dim(x$disj[[nfeat]]$objpar)[2]
+      fitdisj<-t(sapply(x$disj,function(obj) obj$fitmeasures))
+      fitadd<-t(sapply(x$add,function(obj) obj$fitmeasures))
+      colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	rownames(fitdisj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	rownames(fitadd)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      
+      cat("\n*****************************") 
+      cat("\nDISJUNCTIVE MODEL\n")
+      cat("******************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitdisj[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitdisj[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitdisj[,c(9,10)],3))
+
+      cat("\n*********************************") 
+      cat("\nADDITIVE MODEL\n")
+      cat("*********************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitadd[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitadd[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitadd[,c(9,10)],3))
+}
+
+else if ((length(x$disj)==0)&(length(x$add)>0)&(length(x$conj)>0)){
+	nfeat<-length(x$add)
+      minfeat<-dim(x$add[[1]]$objpar)[2]
+      maxfeat<-dim(x$add[[nfeat]]$objpar)[2]
+      fitadd<-t(sapply(x$add,function(obj) obj$fitmeasures))
+      fitconj<-t(sapply(x$conj,function(obj) obj$fitmeasures))
+      colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	 rownames(fitadd)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	 rownames(fitconj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      
+
+      cat("\n*********************************") 
+      cat("\nCONJUNCTIVE MODEL\n")
+      cat("*********************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitconj[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitconj[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitconj[,c(9,10)],3))
+
+
+      cat("\n*****************************") 
+      cat("\nADDITIVE MODEL\n")
+      cat("******************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitadd[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitadd[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitadd[,c(9,10)],3))
+}
+
+
+else if ((length(x$disj)>0)&(length(x$add)>0)&(length(x$conj)>0)){
+	nfeat<-length(x$disj)
+      minfeat<-dim(x$disj[[1]]$objpar)[2]
+      maxfeat<-dim(x$disj[[nfeat]]$objpar)[2]
+      fitdisj<-t(sapply(x$disj,function(obj) obj$fitmeasures))
+      fitadd<-t(sapply(x$add,function(obj) obj$fitmeasures))
+      fitconj<-t(sapply(x$conj,function(obj) obj$fitmeasures))
+      colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	 rownames(fitdisj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	 rownames(fitadd)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	 rownames(fitconj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+      
+
+      cat("\n*****************************") 
+      cat("\nDISJUNCTIVE MODEL\n")
+      cat("******************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitdisj[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitdisj[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitdisj[,c(9,10)],3))
+      
+
+      cat("\n*********************************") 
+      cat("\nCONJUNCTIVE MODEL\n")
+      cat("*********************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitconj[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitconj[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitconj[,c(9,10)],3))
+
+     
+      cat("\n*****************************") 
+      cat("\nADDITIVE MODEL\n")
+      cat("******************************\n") 
+      cat("\nINFORMATION CRITERIA:\n")
+      cat("\n")
+	print(round(fitadd[,c(1:5)],0))
+
+
+	cat("\nPEARSON CHI SQUARE TEST OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitadd[,c(6:8)],3))
+
+	cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
+      cat("\n")
+	print(round(fitadd[,c(9,10)],3))
+}
+
+
 }
 
 
@@ -780,7 +1203,7 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
 
 plot.stepplfm<-function(x,which="BIC",...){
 
-if ((length(x$disj)==0)&(length(x$conj)==0)){
+if ((length(x$disj)==0)&(length(x$conj)==0)&(length(x$add)==0)){
 	nfeat<-length(x)
       if (nfeat==1){print("The fit of the model is only displayed if F>1",quote="FALSE")}
       else{ 
@@ -790,12 +1213,11 @@ if ((length(x$disj)==0)&(length(x$conj)==0)){
 		colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
 		rownames(fitm)<-paste("F=",seq(minfeat,maxfeat),sep="")
             plot(seq(minfeat,maxfeat),fitm[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),...)
-
-
       	
 	}
 }
-else if ((length(x$disj)>0)&(length(x$conj)>0)){
+
+else if ((length(x$disj)>0)&(length(x$conj)>0)&(length(x$add)==0)){
 	nfeat<-length(x$disj)
       if (nfeat==1){print("The fit of the model is only displayed if F>1",quote="FALSE")}
       else{ 
@@ -817,11 +1239,96 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
             legend("topright",c("Disjunctive","Conjunctive"),lty=c(1,2),border=NULL,bty="n")}
             else if ((which=="Correlation")|(which=="VAF")){
      	      legend("bottomright",c("Disjunctive","Conjunctive"),lty=c(1,2),border=NULL,bty="n")}
- 
 
       }
-
 }
+
+
+else if ((length(x$disj)>0)&(length(x$conj)==0)&(length(x$add)>0)){
+	nfeat<-length(x$disj)
+      if (nfeat==1){print("The fit of the model is only displayed if F>1",quote="FALSE")}
+      else{ 
+      	minfeat<-dim(x$disj[[1]]$objpar)[2]
+      	maxfeat<-dim(x$disj[[nfeat]]$objpar)[2]
+      	fitdisj<-t(sapply(x$disj,function(obj) obj$fitmeasures))
+      	fitadd<-t(sapply(x$add,function(obj) obj$fitmeasures))
+		colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitdisj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+		colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitadd)<-paste("F=",seq(minfeat,maxfeat),sep="")
+            comb<-rbind(fitdisj,fitadd)
+            minstat<-apply(comb,2,min)
+            maxstat<-apply(comb,2,max)
+
+		plot(seq(minfeat,maxfeat),fitdisj[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),ylim=c(minstat[which],maxstat[which]),...)
+		lines(seq(minfeat,maxfeat),fitadd[,which],lty=2,type="b")
+		if ((which=="BIC")|(which=="AIC")|(which=="Deviance")|(which=="Chisquare")){
+            legend("topright",c("Disjunctive","Additive"),lty=c(1,2),border=NULL,bty="n")}
+            else if ((which=="Correlation")|(which=="VAF")){
+     	      legend("bottomright",c("Disjunctive","Additive"),lty=c(1,2),border=NULL,bty="n")}
+
+      }
+}
+
+
+else if ((length(x$disj)==0)&(length(x$conj)>0)&(length(x$add)>0)){
+	nfeat<-length(x$add)
+      if (nfeat==1){print("The fit of the model is only displayed if F>1",quote="FALSE")}
+      else{ 
+      	minfeat<-dim(x$add[[1]]$objpar)[2]
+      	maxfeat<-dim(x$add[[nfeat]]$objpar)[2]
+      	fitadd<-t(sapply(x$add,function(obj) obj$fitmeasures))
+      	fitconj<-t(sapply(x$conj,function(obj) obj$fitmeasures))
+		colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitadd)<-paste("F=",seq(minfeat,maxfeat),sep="")
+		colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitconj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+            comb<-rbind(fitadd,fitconj)
+            minstat<-apply(comb,2,min)
+            maxstat<-apply(comb,2,max)
+
+		plot(seq(minfeat,maxfeat),fitadd[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),ylim=c(minstat[which],maxstat[which]),...)
+		lines(seq(minfeat,maxfeat),fitconj[,which],lty=2,type="b")
+		if ((which=="BIC")|(which=="AIC")|(which=="Deviance")|(which=="Chisquare")){
+            legend("topright",c("Additive","Conjunctive"),lty=c(1,2),border=NULL,bty="n")}
+            else if ((which=="Correlation")|(which=="VAF")){
+     	      legend("bottomright",c("Additive","Conjunctive"),lty=c(1,2),border=NULL,bty="n")}
+
+      }
+}
+
+
+else if ((length(x$disj)>0)&(length(x$conj)>0)&(length(x$add)>0)){
+	nfeat<-length(x$disj)
+      if (nfeat==1){print("The fit of the model is only displayed if F>1",quote="FALSE")}
+      else{ 
+      	minfeat<-dim(x$disj[[1]]$objpar)[2]
+      	maxfeat<-dim(x$disj[[nfeat]]$objpar)[2]
+      	fitdisj<-t(sapply(x$disj,function(obj) obj$fitmeasures))
+      	fitconj<-t(sapply(x$conj,function(obj) obj$fitmeasures))
+      	fitadd<-t(sapply(x$add,function(obj) obj$fitmeasures))
+		colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitdisj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+		colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitconj)<-paste("F=",seq(minfeat,maxfeat),sep="")
+		colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+		rownames(fitadd)<-paste("F=",seq(minfeat,maxfeat),sep="")
+            comb<-rbind(fitadd,fitconj,fitadd)
+            minstat<-apply(comb,2,min)
+            maxstat<-apply(comb,2,max)
+
+		plot(seq(minfeat,maxfeat),fitdisj[,which],xlab="Number of features",ylab=which,type="b",xaxp=c(minfeat,maxfeat,maxfeat-minfeat),ylim=c(minstat[which],maxstat[which]),...)
+		lines(seq(minfeat,maxfeat),fitconj[,which],lty=2,type="b")
+		lines(seq(minfeat,maxfeat),fitadd[,which],lty=3,type="b")
+		if ((which=="BIC")|(which=="AIC")|(which=="Deviance")|(which=="Chisquare")){
+            legend("topright",c("Disjunctive","Conjunctive","Additive"),lty=c(1,2,3),border=NULL,bty="n")}
+            else if ((which=="Correlation")|(which=="VAF")){
+     	      legend("bottomright",c("Disjunctive","Conjunctive","Additive"),lty=c(1,2,3),border=NULL,bty="n")}
+
+      }
+}
+
+
 }
 
 
@@ -832,7 +1339,7 @@ else if ((length(x$disj)>0)&(length(x$conj)>0)){
 
 summary.stepplfm<-function(object, ...)
 {
- if ((length(object$disj)==0)&(length(object$conj)==0)){
+ if ((length(object$disj)==0)&(length(object$conj)==0)&(length(object$add)==0)){
 	nfeat<-length(object)
 	minfeat<-dim(object[[1]]$objpar)[2]
 	maxfeat<-dim(object[[nfeat]]$objpar)[2]
@@ -845,7 +1352,9 @@ summary.stepplfm<-function(object, ...)
     		}
      else if (object[[1]]$call$maprule=="conj"){
        rownames(fitm)<-paste("CONJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
-
+		}
+    else if (object[[1]]$call$maprule=="add"){
+       rownames(fitm)<-paste("ADDITIVE F=",seq(minfeat,maxfeat),sep="")
 		}
 
       result<-fitm
@@ -853,17 +1362,20 @@ summary.stepplfm<-function(object, ...)
       result 
 	}
 
-else if ((length(object$disj)>0)|(length(object$conj)>0)){
+else if ((length(object$disj)>0)|(length(object$conj)>0)|(length(object$add)>0)){
       nfeat<-length(object$disj)
       minfeat<-dim(object$disj[[1]]$objpar)[2]
       maxfeat<-dim(object$disj[[nfeat]]$objpar)[2]
       fitdisj<-t(sapply(object$disj,function(x) x$fitmeasures))
       fitconj<-t(sapply(object$conj,function(x) x$fitmeasures))
+      fitadd<-t(sapply(object$add,function(x) x$fitmeasures))
       colnames(fitdisj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitdisj)<-paste("DISJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
+	 rownames(fitdisj)<-paste("DISJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
       colnames(fitconj)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
-	rownames(fitconj)<-paste("CONJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
-      result<-rbind(fitdisj,fitconj)      
+	 rownames(fitconj)<-paste("CONJUNCTIVE F=",seq(minfeat,maxfeat),sep="")
+      colnames(fitadd)<-c("LogLik","LogPost","Deviance","AIC","BIC","Chisquare","df","p-value","Correlation","VAF")
+	 rownames(fitadd)<-paste("ADDITIVE F=",seq(minfeat,maxfeat),sep="")
+      result<-rbind(fitdisj,fitconj,fitadd)      
       class(result)<-"summary.stepplfm"
       result 
 
@@ -1468,7 +1980,7 @@ F<-dim(objpar)[2]
 
 if (sum((objpar<0)|(objpar>1)|is.nan(objpar))>0) print("Object parameters should all be non-missing and between 0 and 1")
 else if (sum((attpar<0)|(attpar>1)|is.nan(attpar))>0) print("Attribute parameters should all be between 0 and 1")
-else if ((maprule!="disj")&(maprule!="conj")) print("Incorrect specification of mapping rule")
+else if ((maprule!="disj")&(maprule!="conj")&(maprule!="add")) print("Incorrect specification of mapping rule")
 else if ((model!=1) & (model!=2)  & (model!=3) & (model!=4) & (model!=5) & (model!=6)) print("model should be specified as 1, 2, 3, 4, 5 or 6")
 else if (N<=0) print("The number of replications should be positive (N>0)")
 else if (N>0)
@@ -1490,6 +2002,7 @@ for (k in 1:K){
 laty<-rbinom(F,1,attpar[k,])
 if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
 else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+else if (maprule=="add"){if (runif(1)<=mean(latx*laty)) data[i,j,k]<-1 else data[i,j,k]<-0}
 }}}
 
 ## compute conditional probabilities
@@ -1509,6 +2022,14 @@ condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
        (1-(1 - objpar[, f, t]) %o% attpar[, f])}}
 }
 
+else if (maprule=="add"){
+condprob.JKT <- array(rep(0, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] + 
+       (objpar[, f, t] %o% attpar[, f])}}
+     condprob.JKT<-condprob.JKT/F
+}
 } ## end model==1
 
 if (model==2){
@@ -1519,6 +2040,7 @@ for (k in 1:K){
 laty<-rbinom(F,1,attpar[k,,lcnum[i]])
 if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
 else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+else if (maprule=="add"){if (runif(1)<=mean(latx*laty)) data[i,j,k]<-1 else data[i,j,k]<-0}
 }}}
 
 ## compute conditional probabilities
@@ -1536,6 +2058,15 @@ condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
    for (f in 1:F) {
      condprob.JKT[, , t] <- condprob.JKT[, , t] * 
        (1-(1 - objpar[, f]) %o% attpar[, f, t])}}
+}
+
+else if (maprule=="add"){
+condprob.JKT <- array(rep(0, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] + 
+       (objpar[, f] %o% attpar[, f, t])}}
+     condprob.JKT<-condprob.JKT/F
 }
 
 } ## end model==2
@@ -1548,6 +2079,7 @@ for (k in 1:K){
 laty<-rbinom(F,1,attpar[k,,lcnum[i]])
 if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
 else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+else if (maprule=="add"){if (runif(1)<=mean(latx*laty)) data[i,j,k]<-1 else data[i,j,k]<-0}
 }}}
 
 ## compute conditional probabilities
@@ -1566,7 +2098,14 @@ condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
      condprob.JKT[, , t] <- condprob.JKT[, , t] * 
        (1-(1 - objpar[, f, t]) %o% attpar[, f, t])}}
 }
-
+else if (maprule=="add"){
+condprob.JKT <- array(rep(0, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] + 
+       (objpar[, f, t] %o% attpar[, f, t])}}
+     condprob.JKT<-condprob.JKT/F
+}
 } ## end model==3
 
 if (model==4){
@@ -1577,6 +2116,7 @@ for (j in 1:J){
 latx<-rbinom(F,1,objpar[j,,lcnum[i]])
 if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
 else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+else if (maprule=="add"){if (runif(1)<=mean(latx*laty)) data[i,j,k]<-1 else data[i,j,k]<-0}
 }}}
 
 ## compute conditional probabilities
@@ -1596,6 +2136,15 @@ condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
        (1-(1 - objpar[, f, t]) %o% attpar[, f])}}
 }
 
+else if (maprule=="add"){
+condprob.JKT <- array(rep(0, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] + 
+       (objpar[, f, t] %o% attpar[, f])}}
+     condprob.JKT<-condprob.JKT/F
+}
+
 } ## end model==4
 
 if (model==5){
@@ -1606,6 +2155,7 @@ for (j in 1:J){
 latx<-rbinom(F,1,objpar[j,])
 if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
 else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+else if (maprule=="add"){if (runif(1)<=mean(latx*laty)) data[i,j,k]<-1 else data[i,j,k]<-0}
 }}}
 
 ## compute conditional probabilities
@@ -1625,6 +2175,15 @@ condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
        (1-(1 - objpar[, f]) %o% attpar[, f, t])}}
 }
 
+else if (maprule=="add"){
+condprob.JKT <- array(rep(0, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] + 
+       (objpar[, f] %o% attpar[, f, t])}}
+     condprob.JKT<-condprob.JKT/F
+}
+
 } ## end model==5
 
 if (model==6){
@@ -1635,6 +2194,7 @@ for (j in 1:J){
 latx<-rbinom(F,1,objpar[j,,lcnum[i]])
 if (maprule=="disj"){data[i,j,k]<-ifelse(sum(latx*laty)>0,1,0)}
 else if (maprule=="conj") {data[i,j,k]<-ifelse(min(latx-laty)<0,0,1)}
+else if (maprule=="add"){if (runif(1)<=mean(latx*laty)) data[i,j,k]<-1 else data[i,j,k]<-0}
 }}}
 
 ## compute conditional probabilities
@@ -1652,6 +2212,15 @@ condprob.JKT <- array(rep(1, J * K * T), c(J, K, T))
    for (f in 1:F) {
      condprob.JKT[, , t] <- condprob.JKT[, , t] * 
        (1-(1 - objpar[, f, t]) %o% attpar[, f, t])}}
+}
+
+else if (maprule=="add"){
+condprob.JKT <- array(rep(0, J * K * T), c(J, K, T))
+ for (t in 1:T) {
+   for (f in 1:F) {
+     condprob.JKT[, , t] <- condprob.JKT[, , t] + 
+       (objpar[, f, t] %o% attpar[, f, t])}}
+     condprob.JKT<-condprob.JKT/F
 }
 
 } ## end model==6
@@ -1674,8 +2243,13 @@ gendatLCplfm<-list(call=match.call(),data=data,class=lcnum,condprob.JKT=condprob
 
 LCplfm<-function(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,model=1,
                  start.objectparameters=NULL,start.attributeparameters=NULL,
-                 start.sizeparameters=NULL,delta=0.0001,printrun=FALSE,update.objectparameters=NULL,update.attributeparameters=NULL)
+                 start.sizeparameters=NULL,delta=0.0001,printrun=FALSE,update.objectparameters=NULL,update.attributeparameters=NULL, Nbootstrap=2000)
 {
+
+##functions
+post95<-function(x){post95<-quantile(x,c(0.025,0.5,0.975))}
+post99<-function(x){post99<-quantile(x,c(0.005,0.5,0.995))}
+
 
 # check input and analysis specifications
 # dimensions data
@@ -1717,7 +2291,7 @@ if (length(dim(data))!=3|(NI<5)) {print("The array 'data' should be a three-way 
 else if (sum((data!=0) & (data!=1))>0){print("The elements of the array 'data' should equal 0 or 1")}
 else if (F<1){print("The number of latent features should be at least 1 (F>=1)")}
 else if (T<1){print("The number of latent classes should be at least 1 (T>=1)")}
-else if ((maprule!="disj") & (maprule!="conj")) {print("The mapping rule is not correctly specified")}
+else if ((maprule!="disj") & (maprule!="conj") & (maprule!="add")) {print("The mapping rule is not correctly specified")}
 else if (M<1) {print("The number of requested runs should be at least one (M>=1)")}
 else if (emcrit1<0 | emcrit2<0) {print("emcrit1 and emcrit2 should be small positive numbers")}
 
@@ -1752,6 +2326,9 @@ else if  ((model==1|model==4) & (!is.null(update.attributeparameters)) & (UPATT[
 
 
 
+## estimate model M_1
+## LCPLFM with constant classification objects and heterogeneity object parameters
+
 else if (model==1){
 
 if (maprule=="conj") {data<-1-data}
@@ -1761,6 +2338,11 @@ if (maprule=="conj") {data<-1-data}
 I<-dim(data)[1]
 J<-dim(data)[2]
 K<-dim(data)[3]
+
+# compute number of object/attribute pairs
+Nattpair<-K*(K-1)/2
+Nobjpair<-J*(J-1)/2
+
 
 ## define labels
 
@@ -1851,12 +2433,32 @@ loglik.n <- 0.0
 postprob <- double (T*I)
 
 
+OR.commonatt.rep<-double(Nbootstrap*J*Nattpair)
+OR.commonobj.rep<-double(Nbootstrap*K*Nobjpair)
+report.commonatt<-double(J*Nattpair*5)
+report.commonobj<-double(K*Nobjpair*5)
 
-result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+
+## call C function to estimate candidate model
+## use flag==0 to skip computation of gradient and standard errors 
+## use convergence criterion emcrit1 
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_Y_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_Y_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -1867,7 +2469,9 @@ loglik.runs[run]<-result[[22]]
 
 if (printrun=="TRUE"){
  	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
- 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
+     else if (maprule=="add") {print(paste("ADDITIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
+ 
  }
 
 } ##end run
@@ -1906,12 +2510,27 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
-result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate final model
+## use flag==1 to compute gradient and standard errors, 
+## use emcrit2 as convergence criterion
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_Y_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_Y_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -1963,15 +2582,58 @@ postprob.best<-matrix(result[[23]],nrow=I)
 colnames(postprob.best)<-classlabels
 
 
+OR.comatt.rep<-aperm(array(result[[26]],c(Nattpair,J,Nbootstrap)),c(3,2,1))
+OR.comobj.rep<-aperm(array(result[[27]],c(Nobjpair,K,Nbootstrap)),c(3,2,1))
+
+report.comatt<-matrix(result[[28]],nrow=J*Nattpair,byrow=TRUE)
+report.comobj<-matrix(result[[29]],nrow=K*Nobjpair,byrow=TRUE)
+
+#report bootstrap
+
+p95.ORcomatt<-apply(OR.comatt.rep,c(2,3),post95)
+p99.ORcomatt<-apply(OR.comatt.rep,c(2,3),post99)
+
+
+p95.ORcomobj<-apply(OR.comobj.rep,c(2,3),post95)
+p99.ORcomobj<-apply(OR.comobj.rep,c(2,3),post99)
+
+
+temp<-cbind(c(t(p95.ORcomatt[1,,])),c(t(p95.ORcomatt[3,,])),c(t(p99.ORcomatt[1,,])),c(t(p99.ORcomatt[3,,])))
+report.OR.attpair<-cbind(report.comatt,temp)
+dimnames(report.OR.attpair)[[2]]<-c("object j","attribute k1","attribute k2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+
+temp<-cbind(c(t(p95.ORcomobj[1,,])),c(t(p95.ORcomobj[3,,])),c(t(p99.ORcomobj[1,,])),c(t(p99.ORcomobj[3,,])))
+report.OR.objpair<-cbind(report.comobj,temp)
+dimnames(report.OR.objpair)[[2]]<-c("attribute k","object j1","object j2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+pOR.attpair.inCI95<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,6])& (report.OR.attpair[,4]<= report.OR.attpair[,7]),1,0))
+pOR.attpair.inCI99<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,8])& (report.OR.attpair[,4]<= report.OR.attpair[,9]),1,0))
+
+pOR.objpair.inCI95<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,6])& (report.OR.objpair[,4]<= report.OR.objpair[,7]),1,0))
+pOR.objpair.inCI99<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,8])& (report.OR.objpair[,4]<= report.OR.objpair[,9]),1,0))
+
+
+
 ##########################################################
 ## compute conditional and marginal probabilities 
 ###########################################################
 
+# disjunctive, conjunctive
+if (maprule=="disj"|maprule=="conj"){
 condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
 for (t in 1:T){
  for (f in 1:F){
    condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f])}}
 condprob.JKT<-1-condprob.JKT
+}
+else if (maprule=="add"){
+condprob.JKT<-array(rep(0,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]+(sigma.best[,f,t]%o%rho.best[,f])}}
+condprob.JKT<-condprob.JKT/F
+}
 
 margprob.JK<-matrix(rep(1,J*K),nrow=J)
 weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
@@ -1993,32 +2655,43 @@ dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
 deviance<--2*loglik.best
 AIC<-deviance+2*Npar
 BIC<-deviance+Npar*log(I)
-fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
-rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF,pOR.attpair.inCI95,pOR.objpair.inCI95,pOR.attpair.inCI99,pOR.objpair.inCI99),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI","Proportion OR object pairs in 95% CI","Proportion OR attribute pairs in 99% CI","Proportion OR object pairs in 99% CI")
 
 tempcall<-match.call()
-if (maprule=="disj") tempcall$maprule<-"disj" else tempcall$maprule<-"conj"
+if (maprule=="disj") tempcall$maprule<-"disj" 
+if (maprule=="conj") tempcall$maprule<-"conj" 
+if (maprule=="add") tempcall$maprule<-"add" 
+
 tempcall$model<-1
 
-if (maprule=="disj"){
+if (maprule=="disj"|maprule=="add"){
 LCplfm<-list(call=tempcall,logpost.runs=logpost.runs,best=best,
              objpar=sigma.best,attpar=rho.best,sizepar=gamma.best,
              SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT)
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT,
+             report.OR.attpair=report.OR.attpair,report.OR.objpair=report.OR.objpair)
 }
 else if (maprule=="conj"){
 LCplfm<-list(call=tempcall,logpost.runs=logpost.runs,best=best,
              objpar=1-sigma.best,attpar=rho.best,sizepar=gamma.best,
              SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT)
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT,
+             report.OR.attpair=report.OR.attpair,report.OR.objpair=report.OR.objpair)
 
 }
 class(LCplfm)<-"LCplfm"
 LCplfm
 
 }## end model 1
+
+
+## estimate model M_2
+## LCPLFM with constant classification objects and heterogeneity attribute parameters
+ 
 else if (model==2){
 
 if (maprule=="conj") {data<-1-data}
@@ -2027,6 +2700,10 @@ if (maprule=="conj") {data<-1-data}
 I<-dim(data)[1]
 J<-dim(data)[2]
 K<-dim(data)[3]
+
+# compute number of object/attribute pairs
+Nattpair<-K*(K-1)/2
+Nobjpair<-J*(J-1)/2
 
 ## define labels
 
@@ -2117,13 +2794,31 @@ loglik.n <- 0.0
 postprob <- double (T*I)
 
 
-result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+OR.commonatt.rep<-double(Nbootstrap*J*Nattpair)
+OR.commonobj.rep<-double(Nbootstrap*K*Nobjpair)
+report.commonatt<-double(J*Nattpair*5)
+report.commonobj<-double(K*Nobjpair*5)
+
+## call C function to estimate candidate model
+## use flag==0 to skip computation of gradient and standard errors 
+## use convergence criterion emcrit1 
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_X_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),
-              as.integer(0))
-
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0), as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_X_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0), as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.runs[,,run]<-matrix(result[[9]][1:(J*F)],nrow=J,byrow=T)
@@ -2134,7 +2829,8 @@ loglik.runs[run]<-result[[22]]
 
 if (printrun=="TRUE"){
  	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
- 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
+ 	else if (maprule=="add") {print(paste("ADDITIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
  } 
 
 } ##end run
@@ -2174,12 +2870,26 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
-result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate final model
+## use flag==1 to compute gradient and standard errors, 
+## use emcrit2 as convergence criterion
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_X_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
-
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1), as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_X_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1), as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 
@@ -2231,15 +2941,55 @@ loglik.best<-result[[22]]
 postprob.best<-matrix(result[[23]],nrow=I)
 colnames(postprob.best)<-classlabels
 
+OR.comatt.rep<-aperm(array(result[[26]],c(Nattpair,J,Nbootstrap)),c(3,2,1))
+OR.comobj.rep<-aperm(array(result[[27]],c(Nobjpair,K,Nbootstrap)),c(3,2,1))
+
+report.comatt<-matrix(result[[28]],nrow=J*Nattpair,byrow=TRUE)
+report.comobj<-matrix(result[[29]],nrow=K*Nobjpair,byrow=TRUE)
+
+#report bootstrap
+
+p95.ORcomatt<-apply(OR.comatt.rep,c(2,3),post95)
+p99.ORcomatt<-apply(OR.comatt.rep,c(2,3),post99)
+
+
+p95.ORcomobj<-apply(OR.comobj.rep,c(2,3),post95)
+p99.ORcomobj<-apply(OR.comobj.rep,c(2,3),post99)
+
+
+temp<-cbind(c(t(p95.ORcomatt[1,,])),c(t(p95.ORcomatt[3,,])),c(t(p99.ORcomatt[1,,])),c(t(p99.ORcomatt[3,,])))
+report.OR.attpair<-cbind(report.comatt,temp)
+dimnames(report.OR.attpair)[[2]]<-c("object j","attribute k1","attribute k2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+
+temp<-cbind(c(t(p95.ORcomobj[1,,])),c(t(p95.ORcomobj[3,,])),c(t(p99.ORcomobj[1,,])),c(t(p99.ORcomobj[3,,])))
+report.OR.objpair<-cbind(report.comobj,temp)
+dimnames(report.OR.objpair)[[2]]<-c("attribute k","object j1","object j2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+pOR.attpair.inCI95<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,6])& (report.OR.attpair[,4]<= report.OR.attpair[,7]),1,0))
+pOR.attpair.inCI99<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,8])& (report.OR.attpair[,4]<= report.OR.attpair[,9]),1,0))
+
+pOR.objpair.inCI95<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,6])& (report.OR.objpair[,4]<= report.OR.objpair[,7]),1,0))
+pOR.objpair.inCI99<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,8])& (report.OR.objpair[,4]<= report.OR.objpair[,9]),1,0))
+
+
 ##########################################################
 ## compute conditional and marginal probabilities 
 ###########################################################
-
+if (maprule=="disj"|maprule=="conj"){
 condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
 for (t in 1:T){
  for (f in 1:F){
    condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f]%o%rho.best[,f,t])}}
 condprob.JKT<-1-condprob.JKT
+}
+else if (maprule=="add"){
+condprob.JKT<-array(rep(0,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]+(sigma.best[,f]%o%rho.best[,f,t])}}
+condprob.JKT<-condprob.JKT/F
+}
 
 margprob.JK<-matrix(rep(1,J*K),nrow=J)
 weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
@@ -2262,28 +3012,35 @@ dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
 deviance<--2*loglik.best
 AIC<-deviance+2*Npar
 BIC<-deviance+Npar*log(I)
-fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
-rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF,pOR.attpair.inCI95,pOR.objpair.inCI95,pOR.attpair.inCI99,pOR.objpair.inCI99),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI","Proportion OR object pairs in 95% CI","Proportion OR attribute pairs in 99% CI","Proportion OR object pairs in 99% CI")
 
-if (maprule=="disj"){
+
+if (maprule=="disj"|maprule=="add"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=sigma.best,attpar=rho.best,sizepar=gamma.best,
              SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT)
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT,
+             report.OR.attpair=report.OR.attpair,report.OR.objpair=report.OR.objpair)
 }
 else if (maprule=="conj"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=1-sigma.best,attpar=rho.best,sizepar=gamma.best,
              SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT)
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT,
+             report.OR.attpair=report.OR.attpair,report.OR.objpair=report.OR.objpair)
 }
 
 class(LCplfm)<-"LCplfm"
 LCplfm
 
 } ## end model2
+
+## estimate model M_3
+## LCPLFM with constant classification objects and heterogeneity in both object- and attribute parameters
 
 else if (model==3){
 
@@ -2293,6 +3050,11 @@ if (maprule=="conj") {data<-1-data}
 I<-dim(data)[1]
 J<-dim(data)[2]
 K<-dim(data)[3]
+
+# compute number of object/attribute pairs
+Nattpair<-K*(K-1)/2
+Nobjpair<-J*(J-1)/2
+
 
 ## define labels
 
@@ -2383,13 +3145,31 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
+OR.commonatt.rep<-double(Nbootstrap*J*Nattpair)
+OR.commonobj.rep<-double(Nbootstrap*K*Nobjpair)
+report.commonatt<-double(J*Nattpair*5)
+report.commonobj<-double(K*Nobjpair*5)
 
+## call C function to estimate candidate model
+## use flag==0 to skip computation of gradient and standard errors 
+## use convergence criterion emcrit1 
 
-result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -2400,7 +3180,8 @@ loglik.runs[run]<-result[[22]]
 
 if (printrun=="TRUE"){
  	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
- 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
+     else if (maprule=="add") {print(paste("ADDITIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
  }
 
 } ##end run
@@ -2449,12 +3230,27 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
-result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate final model
+## use flag==1 to compute gradient and standard errors, 
+## use emcrit2 as convergence criterion
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -2508,15 +3304,56 @@ loglik.best<-result[[22]]
 postprob.best<-matrix(result[[23]],nrow=I)
 colnames(postprob.best)<-classlabels
 
+OR.comatt.rep<-aperm(array(result[[26]],c(Nattpair,J,Nbootstrap)),c(3,2,1))
+OR.comobj.rep<-aperm(array(result[[27]],c(Nobjpair,K,Nbootstrap)),c(3,2,1))
+
+report.comatt<-matrix(result[[28]],nrow=J*Nattpair,byrow=TRUE)
+report.comobj<-matrix(result[[29]],nrow=K*Nobjpair,byrow=TRUE)
+
+#report bootstrap
+
+p95.ORcomatt<-apply(OR.comatt.rep,c(2,3),post95)
+p99.ORcomatt<-apply(OR.comatt.rep,c(2,3),post99)
+
+
+p95.ORcomobj<-apply(OR.comobj.rep,c(2,3),post95)
+p99.ORcomobj<-apply(OR.comobj.rep,c(2,3),post99)
+
+
+temp<-cbind(c(t(p95.ORcomatt[1,,])),c(t(p95.ORcomatt[3,,])),c(t(p99.ORcomatt[1,,])),c(t(p99.ORcomatt[3,,])))
+report.OR.attpair<-cbind(report.comatt,temp)
+dimnames(report.OR.attpair)[[2]]<-c("object j","attribute k1","attribute k2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+
+temp<-cbind(c(t(p95.ORcomobj[1,,])),c(t(p95.ORcomobj[3,,])),c(t(p99.ORcomobj[1,,])),c(t(p99.ORcomobj[3,,])))
+report.OR.objpair<-cbind(report.comobj,temp)
+dimnames(report.OR.objpair)[[2]]<-c("attribute k","object j1","object j2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+pOR.attpair.inCI95<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,6])& (report.OR.attpair[,4]<= report.OR.attpair[,7]),1,0))
+pOR.attpair.inCI99<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,8])& (report.OR.attpair[,4]<= report.OR.attpair[,9]),1,0))
+
+pOR.objpair.inCI95<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,6])& (report.OR.objpair[,4]<= report.OR.objpair[,7]),1,0))
+pOR.objpair.inCI99<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,8])& (report.OR.objpair[,4]<= report.OR.objpair[,9]),1,0))
+
+
 ##########################################################
 ## compute conditional and marginal probabilities 
 ###########################################################
 
+if (maprule=="disj"|maprule=="conj"){
 condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
 for (t in 1:T){
  for (f in 1:F){
    condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f,t])}}
 condprob.JKT<-1-condprob.JKT
+}
+else if (maprule=="add"){
+condprob.JKT<-array(rep(0,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]+(sigma.best[,f,t]%o%rho.best[,f,t])}}
+condprob.JKT<-condprob.JKT/F
+}
 
 margprob.JK<-matrix(rep(1,J*K),nrow=J)
 weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
@@ -2538,27 +3375,33 @@ dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
 deviance<--2*loglik.best
 AIC<-deviance+2*Npar
 BIC<-deviance+Npar*log(I)
-fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
-rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF,pOR.attpair.inCI95,pOR.objpair.inCI95,pOR.attpair.inCI99,pOR.objpair.inCI99),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI","Proportion OR object pairs in 95% CI","Proportion OR attribute pairs in 99% CI","Proportion OR object pairs in 99% CI")
 
-if (maprule=="disj"){
+if (maprule=="disj"|maprule=="add"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=sigma.best,attpar=rho.best,sizepar=gamma.best,
              SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT)
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=margprob.JK,condprob.JKT=condprob.JKT,
+             report.OR.attpair=report.OR.attpair,report.OR.objpair=report.OR.objpair)
 }
 else if (maprule=="conj"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=1-sigma.best,attpar=rho.best,sizepar=gamma.best,
              SE.objpar=SEsigma.best,SE.attpar=SErho.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradsigma.best,gradient.attpar=gradrho.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT)
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-margprob.JK,condprob.JKT=1-condprob.JKT,
+             report.OR.attpair=report.OR.attpair,report.OR.objpair=report.OR.objpair)
 }
 class(LCplfm)<-"LCplfm"
 LCplfm
 
 } ## end model 3
+
+## estimate model M_4
+## LCPLFM with constant classification attributes and heterogeneity in object parameters
 
 else if (model==4){
 
@@ -2571,6 +3414,10 @@ data<-aperm(data,c(1,3,2))
 I<-dim(data)[1]
 J<-dim(data)[2]
 K<-dim(data)[3]
+
+# compute number of object/attribute pairs
+Nattpair<-K*(K-1)/2
+Nobjpair<-J*(J-1)/2
 
 ## define labels
 
@@ -2659,13 +3506,32 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
+OR.commonatt.rep<-double(Nbootstrap*J*Nattpair)
+OR.commonobj.rep<-double(Nbootstrap*K*Nobjpair)
+report.commonatt<-double(J*Nattpair*5)
+report.commonobj<-double(K*Nobjpair*5)
 
-result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate candidate model
+## use flag==0 to skip computation of gradient and standard errors 
+## use convergence criterion emcrit1 
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_X_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),
-              as.integer(0))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+
+else if (maprule=="add"){
+result <- .C("PlFm_X_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 
 ## take output from result
@@ -2678,7 +3544,8 @@ loglik.runs[run]<-result[[22]]
 
 if (printrun=="TRUE"){
  	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
- 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
+     else if (maprule=="add") {print(paste("ADDITIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}  
  } 
 
 } ##end run
@@ -2719,12 +3586,28 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
-result <- .C("PlFm_X_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate final model
+## use flag==1 to compute gradient and standard errors, 
+## use emcrit2 as convergence criterion
+
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_X_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
+else if (maprule=="add"){
+result <- .C("PlFm_X_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 
@@ -2777,15 +3660,58 @@ loglik.best<-result[[22]]
 postprob.best<-matrix(result[[23]],nrow=I)
 colnames(postprob.best)<-classlabels
 
+OR.comatt.rep<-aperm(array(result[[26]],c(Nattpair,J,Nbootstrap)),c(3,2,1))
+OR.comobj.rep<-aperm(array(result[[27]],c(Nobjpair,K,Nbootstrap)),c(3,2,1))
+
+report.comatt<-matrix(result[[28]],nrow=J*Nattpair,byrow=TRUE)
+report.comobj<-matrix(result[[29]],nrow=K*Nobjpair,byrow=TRUE)
+
+#report bootstrap
+
+p95.ORcomatt<-apply(OR.comatt.rep,c(2,3),post95)
+p99.ORcomatt<-apply(OR.comatt.rep,c(2,3),post99)
+
+
+p95.ORcomobj<-apply(OR.comobj.rep,c(2,3),post95)
+p99.ORcomobj<-apply(OR.comobj.rep,c(2,3),post99)
+
+
+temp<-cbind(c(t(p95.ORcomatt[1,,])),c(t(p95.ORcomatt[3,,])),c(t(p99.ORcomatt[1,,])),c(t(p99.ORcomatt[3,,])))
+report.OR.attpair<-cbind(report.comatt,temp)
+dimnames(report.OR.attpair)[[2]]<-c("attribute k","object j1","object j2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+
+temp<-cbind(c(t(p95.ORcomobj[1,,])),c(t(p95.ORcomobj[3,,])),c(t(p99.ORcomobj[1,,])),c(t(p99.ORcomobj[3,,])))
+report.OR.objpair<-cbind(report.comobj,temp)
+dimnames(report.OR.objpair)[[2]]<-c("object j","attribute k1","attribute k2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+pOR.attpair.inCI95<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,6])& (report.OR.attpair[,4]<= report.OR.attpair[,7]),1,0))
+pOR.attpair.inCI99<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,8])& (report.OR.attpair[,4]<= report.OR.attpair[,9]),1,0))
+
+pOR.objpair.inCI95<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,6])& (report.OR.objpair[,4]<= report.OR.objpair[,7]),1,0))
+pOR.objpair.inCI99<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,8])& (report.OR.objpair[,4]<= report.OR.objpair[,9]),1,0))
+
+
+
 ##########################################################
 ## compute conditional and marginal probabilities 
 ###########################################################
 
+if (maprule=="disj"|maprule=="conj"){
 condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
 for (t in 1:T){
  for (f in 1:F){
    condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f]%o%rho.best[,f,t])}}
 condprob.JKT<-1-condprob.JKT
+}
+
+else if (maprule=="add"){
+condprob.JKT<-array(rep(0,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]+(sigma.best[,f]%o%rho.best[,f,t])}}
+condprob.JKT<-condprob.JKT/F
+}
 
 margprob.JK<-matrix(rep(1,J*K),nrow=J)
 weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
@@ -2810,27 +3736,34 @@ dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
 deviance<--2*loglik.best
 AIC<-deviance+2*Npar
 BIC<-deviance+Npar*log(I)
-fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
-rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF,pOR.objpair.inCI95,pOR.attpair.inCI95,pOR.objpair.inCI99,pOR.attpair.inCI99),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI","Proportion OR object pairs in 95% CI","Proportion OR attribute pairs in 99% CI","Proportion OR object pairs in 99% CI")
 
-if (maprule=="disj"){
+if (maprule=="disj"|maprule=="add"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=rho.best,attpar=sigma.best,sizepar=gamma.best,
              SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)))
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)),
+             report.OR.attpair=report.OR.objpair,report.OR.objpair=report.OR.attpair)
 }
 else if (maprule=="conj"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=1-rho.best,attpar=sigma.best,sizepar=gamma.best,
              SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)))
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)),
+             report.OR.attpair=report.OR.objpair,report.OR.objpair=report.OR.attpair)
 }
 class(LCplfm)<-"LCplfm"
 LCplfm
 
 } ## model 4
+
+
+## estimate model M_5
+## LCPLFM with constant classification attributes and heterogeneity in attribute parameters
 
 else if (model==5){
 
@@ -2843,6 +3776,10 @@ data<-aperm(data,c(1,3,2))
 I<-dim(data)[1]
 J<-dim(data)[2]
 K<-dim(data)[3]
+
+# compute number of object/attribute pairs
+Nattpair<-K*(K-1)/2
+Nobjpair<-J*(J-1)/2
 
 ## define labels
 
@@ -2934,13 +3871,35 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
+OR.commonatt.rep<-double(Nbootstrap*J*Nattpair)
+OR.commonobj.rep<-double(Nbootstrap*K*Nobjpair)
+report.commonatt<-double(J*Nattpair*5)
+report.commonobj<-double(K*Nobjpair*5)
 
 
-result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+
+## call C function to estimate candidate model
+## use flag==0 to skip computation of gradient and standard errors 
+## use convergence criterion emcrit1 
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_Y_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_Y_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+
 
 ## take output from result
 sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -2952,6 +3911,7 @@ loglik.runs[run]<-result[[22]]
 if (printrun=="TRUE"){
  	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
  	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+     else if (maprule=="add") {print(paste("ADDITIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
  }
 
 } ##end run
@@ -2991,12 +3951,27 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
-result <- .C("PlFm_XZ_Y", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate final model
+## use flag==1 to compute gradient and standard errors, 
+## use emcrit2 as convergence criterion
+
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_Y_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
-
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_Y_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.best<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -3047,15 +4022,57 @@ loglik.best<-result[[22]]
 postprob.best<-matrix(result[[23]],nrow=I)
 colnames(postprob.best)<-classlabels
 
+OR.comatt.rep<-aperm(array(result[[26]],c(Nattpair,J,Nbootstrap)),c(3,2,1))
+OR.comobj.rep<-aperm(array(result[[27]],c(Nobjpair,K,Nbootstrap)),c(3,2,1))
+
+report.comatt<-matrix(result[[28]],nrow=J*Nattpair,byrow=TRUE)
+report.comobj<-matrix(result[[29]],nrow=K*Nobjpair,byrow=TRUE)
+
+#report bootstrap
+
+p95.ORcomatt<-apply(OR.comatt.rep,c(2,3),post95)
+p99.ORcomatt<-apply(OR.comatt.rep,c(2,3),post99)
+
+
+p95.ORcomobj<-apply(OR.comobj.rep,c(2,3),post95)
+p99.ORcomobj<-apply(OR.comobj.rep,c(2,3),post99)
+
+
+temp<-cbind(c(t(p95.ORcomatt[1,,])),c(t(p95.ORcomatt[3,,])),c(t(p99.ORcomatt[1,,])),c(t(p99.ORcomatt[3,,])))
+report.OR.attpair<-cbind(report.comatt,temp)
+dimnames(report.OR.attpair)[[2]]<-c("attribute k","object j1","object j2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+
+temp<-cbind(c(t(p95.ORcomobj[1,,])),c(t(p95.ORcomobj[3,,])),c(t(p99.ORcomobj[1,,])),c(t(p99.ORcomobj[3,,])))
+report.OR.objpair<-cbind(report.comobj,temp)
+dimnames(report.OR.objpair)[[2]]<-c("object j","attribute k1","attribute k2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+pOR.attpair.inCI95<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,6])& (report.OR.attpair[,4]<= report.OR.attpair[,7]),1,0))
+pOR.attpair.inCI99<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,8])& (report.OR.attpair[,4]<= report.OR.attpair[,9]),1,0))
+
+pOR.objpair.inCI95<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,6])& (report.OR.objpair[,4]<= report.OR.objpair[,7]),1,0))
+pOR.objpair.inCI99<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,8])& (report.OR.objpair[,4]<= report.OR.objpair[,9]),1,0))
+
+
+
 ##########################################################
 ## compute conditional and marginal probabilities 
 ###########################################################
 
+if (maprule=="disj"|maprule=="conj"){
 condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
 for (t in 1:T){
  for (f in 1:F){
    condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f])}}
 condprob.JKT<-1-condprob.JKT
+}
+else if (maprule=="add"){
+condprob.JKT<-array(rep(0,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]+(sigma.best[,f,t]%o%rho.best[,f])}}
+condprob.JKT<-condprob.JKT/F
+}
 
 margprob.JK<-matrix(rep(1,J*K),nrow=J)
 weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
@@ -3077,27 +4094,34 @@ dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
 deviance<--2*loglik.best
 AIC<-deviance+2*Npar
 BIC<-deviance+Npar*log(I)
-fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
-rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF,pOR.objpair.inCI95,pOR.attpair.inCI95,pOR.objpair.inCI99,pOR.attpair.inCI99),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI","Proportion OR object pairs in 95% CI","Proportion OR attribute pairs in 99% CI","Proportion OR object pairs in 99% CI")
 
-if (maprule=="disj"){
+if (maprule=="disj"|maprule=="add"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=rho.best,attpar=sigma.best,sizepar=gamma.best,
              SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)))
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)),
+             report.OR.attpair=report.OR.objpair,report.OR.objpair=report.OR.attpair)
 }
 else if (maprule=="conj"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=1-rho.best,attpar=sigma.best,sizepar=gamma.best,
              SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)))
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)),
+             report.OR.attpair=report.OR.objpair,report.OR.objpair=report.OR.attpair)
 }
 class(LCplfm)<-"LCplfm"
 LCplfm
 
 } ## end model 5
+
+
+## estimate model M_6
+## LCPLFM with constant classification attributes and heterogeneity in both object- and attribute parameters
 
 else if (model==6){
 
@@ -3110,6 +4134,10 @@ data<-aperm(data,c(1,3,2))
 I<-dim(data)[1]
 J<-dim(data)[2]
 K<-dim(data)[3]
+
+# compute number of object/attribute pairs
+Nattpair<-K*(K-1)/2
+Nobjpair<-J*(J-1)/2
 
 ## define labels
 
@@ -3200,13 +4228,31 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
+OR.commonatt.rep<-double(Nbootstrap*J*Nattpair)
+OR.commonobj.rep<-double(Nbootstrap*K*Nobjpair)
+report.commonatt<-double(J*Nattpair*5)
+report.commonobj<-double(K*Nobjpair*5)
 
+## call C function to estimate candidate model
+## use flag==0 to skip computation of gradient and standard errors 
+## use convergence criterion emcrit1 
 
-result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit1),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(0),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 ## take output from result
 sigma.runs[,,,run]<-aperm(array(result[[9]],c(T,F,J)),c(3,2,1))
@@ -3217,7 +4263,8 @@ loglik.runs[run]<-result[[22]]
 
 if (printrun=="TRUE"){
  	if (maprule=="disj") {print(paste("DISJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
- 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")} 
+ 	else if (maprule=="conj") {print(paste("CONJUNCTIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}
+     else if (maprule=="add") {print(paste("ADDITIVE ANALYSIS  ","F=",F,"  T=",T,"  RUN=",run,sep=""),quote="FALSE")}  
  }
 
 } ##end run
@@ -3267,11 +4314,27 @@ loglik.n <- 0.0
 
 postprob <- double (T*I)
 
-result <- .C("PlFm_XZ_YZ", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+## call C function to estimate final model
+## use flag==1 to compute gradient and standard errors, 
+## use emcrit2 as convergence criterion
+
+
+if (maprule=="disj"|maprule=="conj"){
+result <- .C("PlFm_XZ_YZ_DC", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
               as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
               as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
               as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
-              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1))
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
+else if (maprule=="add"){
+result <- .C("PlFm_XZ_YZ_ADD", as.integer(ndata), as.integer(I),as.integer(J),as.integer(K),
+              as.integer(F),as.integer(T),as.integer(Pat),as.double(emcrit2),as.double(sigma.n),
+              as.double(rho.n),as.double(gamma.n),as.double(sigma.update),as.double(rho.update),as.double(gradsigma),as.double(gradrho),
+              as.double(gradgamma),as.double(SEsigma),as.double(SErho),as.double(SEgamma),
+              as.double(delta),as.double(logpost.n),as.double(loglik.n),as.double(postprob),as.integer(1),as.integer(Nbootstrap),
+              as.double(OR.commonatt.rep),as.double(OR.commonobj.rep),as.double(report.commonatt),as.double(report.commonobj))
+}
 
 
 ## take output from result
@@ -3326,16 +4389,59 @@ loglik.best<-result[[22]]
 postprob.best<-matrix(result[[23]],nrow=I)
 colnames(postprob.best)<-classlabels
 
+OR.comatt.rep<-aperm(array(result[[26]],c(Nattpair,J,Nbootstrap)),c(3,2,1))
+OR.comobj.rep<-aperm(array(result[[27]],c(Nobjpair,K,Nbootstrap)),c(3,2,1))
+
+report.comatt<-matrix(result[[28]],nrow=J*Nattpair,byrow=TRUE)
+report.comobj<-matrix(result[[29]],nrow=K*Nobjpair,byrow=TRUE)
+
+#report bootstrap
+
+p95.ORcomatt<-apply(OR.comatt.rep,c(2,3),post95)
+p99.ORcomatt<-apply(OR.comatt.rep,c(2,3),post99)
+
+
+p95.ORcomobj<-apply(OR.comobj.rep,c(2,3),post95)
+p99.ORcomobj<-apply(OR.comobj.rep,c(2,3),post99)
+
+
+temp<-cbind(c(t(p95.ORcomatt[1,,])),c(t(p95.ORcomatt[3,,])),c(t(p99.ORcomatt[1,,])),c(t(p99.ORcomatt[3,,])))
+report.OR.attpair<-cbind(report.comatt,temp)
+dimnames(report.OR.attpair)[[2]]<-c("attribute k","object j1","object j2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+
+temp<-cbind(c(t(p95.ORcomobj[1,,])),c(t(p95.ORcomobj[3,,])),c(t(p99.ORcomobj[1,,])),c(t(p99.ORcomobj[3,,])))
+report.OR.objpair<-cbind(report.comobj,temp)
+dimnames(report.OR.objpair)[[2]]<-c("object j","attribute k1","attribute k2","OR.obs","OR.mean","OR.p025","OR.p975","OR.p005","OR.p995")
+
+pOR.attpair.inCI95<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,6])& (report.OR.attpair[,4]<= report.OR.attpair[,7]),1,0))
+pOR.attpair.inCI99<-mean(ifelse((report.OR.attpair[,4]>= report.OR.attpair[,8])& (report.OR.attpair[,4]<= report.OR.attpair[,9]),1,0))
+
+pOR.objpair.inCI95<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,6])& (report.OR.objpair[,4]<= report.OR.objpair[,7]),1,0))
+pOR.objpair.inCI99<-mean(ifelse((report.OR.objpair[,4]>= report.OR.objpair[,8])& (report.OR.objpair[,4]<= report.OR.objpair[,9]),1,0))
+
+
+
 
 ##########################################################
 ## compute conditional and marginal probabilities 
 ###########################################################
 
+if (maprule=="disj"|maprule=="conj"){
 condprob.JKT<-array(rep(1,J*K*T),c(J,K,T))
 for (t in 1:T){
  for (f in 1:F){
    condprob.JKT[,,t]<-condprob.JKT[,,t]*(1-sigma.best[,f,t]%o%rho.best[,f,t])}}
 condprob.JKT<-1-condprob.JKT
+}
+
+else if (maprule=="add"){
+condprob.JKT<-array(rep(0,J*K*T),c(J,K,T))
+for (t in 1:T){
+ for (f in 1:F){
+   condprob.JKT[,,t]<-condprob.JKT[,,t]+(sigma.best[,f,t]%o%rho.best[,f,t])}}
+condprob.JKT<-condprob.JKT/F
+}
 
 margprob.JK<-matrix(rep(1,J*K),nrow=J)
 weight<-rep(1,J)%o%rep(1,K)%o%gamma.best
@@ -3358,22 +4464,25 @@ dimnames(condprob.JKT)[[3]]<-as.list(classlabels)
 deviance<--2*loglik.best
 AIC<-deviance+2*Npar
 BIC<-deviance+Npar*log(I)
-fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF),ncol=1)
-rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+fitmeasures<-matrix(c(loglik.best,logpost.best,deviance,AIC,BIC,correl,VAF,pOR.objpair.inCI95,pOR.attpair.inCI95,pOR.objpair.inCI99,pOR.attpair.inCI99),ncol=1)
+rownames(fitmeasures)<-c("Log Likelihood","Log Posterior","Deviance","AIC","BIC","Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI","Proportion OR object pairs in 95% CI","Proportion OR attribute pairs in 99% CI","Proportion OR object pairs in 99% CI")
 
-if (maprule=="disj"){
+if (maprule=="disj"|maprule=="add"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=rho.best,attpar=sigma.best,sizepar=gamma.best,
              SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)))
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=t(margprob.JK),condprob.JKT=aperm(condprob.JKT,c(2,1,3)),
+             report.OR.attpair=report.OR.objpair,report.OR.objpair=report.OR.attpair)
 }
 else if (maprule=="conj"){
 LCplfm<-list(call=match.call(),logpost.runs=logpost.runs,best=best,
              objpar=1-rho.best,attpar=sigma.best,sizepar=gamma.best,
              SE.objpar=SErho.best,SE.attpar=SEsigma.best,SE.sizepar=SEgamma.best,
              gradient.objpar=gradrho.best,gradient.attpar=gradsigma.best,gradient.sizepar=gradgamma.best,
-             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)))
+             fitmeasures=fitmeasures,postprob=postprob.best,margprob.JK=1-t(margprob.JK),condprob.JKT=1-aperm(condprob.JKT,c(2,1,3)),
+             report.OR.attpair=report.OR.objpair,report.OR.objpair=report.OR.attpair)
 }
 class(LCplfm)<-"LCplfm"
 LCplfm
@@ -3404,8 +4513,14 @@ colnames(crit)<-""
 print(round(crit))
 
 cat("\nDESCRIPTIVE FIT:\n")
-crit<-as.matrix(x$fitmeasures[6:7])
-rownames(crit)<-c("Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+crit<-as.matrix(x$fitmeasures[6:11])
+ 
+rownames(crit)<-c("Correlation observed and expected frequencies J X K table",
+"VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI",
+"Proportion OR object pairs in 95% CI",
+"Proportion OR attribute pairs in 99% CI",
+"Proportion OR object pairs in 99% CI ")
 colnames(crit)<-""
 print(round(crit,3))
 
@@ -3476,11 +4591,16 @@ colnames(crit)<-""
 print(round(crit))
 
 cat("\nDESCRIPTIVE FIT:\n")
-crit<-as.matrix(x$fitmeasures[6:7])
-rownames(crit)<-c("Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+crit<-as.matrix(x$fitmeasures[6:11])
+ 
+rownames(crit)<-c("Correlation observed and expected frequencies J X K table",
+"VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI",
+"Proportion OR object pairs in 95% CI",
+"Proportion OR attribute pairs in 99% CI",
+"Proportion OR object pairs in 99% CI ")
 colnames(crit)<-""
 print(round(crit,3))
-
 
 cat("\nESTIMATE OBJECT PARAMETERS:\n")
 strout<-as.matrix(capture.output(round(x$objpar,2)))
@@ -3549,8 +4669,14 @@ colnames(crit)<-""
 print(round(crit))
 
 cat("\nDESCRIPTIVE FIT:\n")
-crit<-as.matrix(x$fitmeasures[6:7])
-rownames(crit)<-c("Correlation observed and expected frequencies J X K table","VAF observed frequencies J X K table")
+crit<-as.matrix(x$fitmeasures[6:11])
+ 
+rownames(crit)<-c("Correlation observed and expected frequencies J X K table",
+"VAF observed frequencies J X K table",
+"Proportion OR attribute pairs in 95% CI",
+"Proportion OR object pairs in 95% CI",
+"Proportion OR attribute pairs in 99% CI",
+"Proportion OR object pairs in 99% CI ")
 colnames(crit)<-""
 print(round(crit,3))
 
@@ -3611,6 +4737,7 @@ print(strout,quote="FALSE")}
 
 } ## end model 3,6
 }
+
 
 
 #############################################################
@@ -3756,7 +4883,7 @@ for (i in 1:K) {text(positionlabel,i,rowlab[i],cex=cexlabel)}
 ## function stepLCplfm
 #############################################################
 
-stepLCplfm<-function(minF=1,maxF=3,minT=1,maxT=3,data,maprule="disj",M=5,emcrit1=1e-3,emcrit2=1e-8,model=1,delta=0.0001,printrun=FALSE)
+stepLCplfm<-function(minF=1,maxF=3,minT=1,maxT=3,data,maprule="disj",M=5,emcrit1=1e-3,emcrit2=1e-8,model=1,delta=0.0001,printrun=FALSE, Nbootstrap=2000)
 {
 tempcall<-match.call()
 tempcall<-tempcall[c(-2,-3,-4,-5)]
@@ -3771,11 +4898,15 @@ colnames(stepLCplfm)<-paste("T_", seq(minT,maxT),sep="")
 
 for (f in (minF:maxF)){
  for (t in (minT:maxT)){
- stepLCplfm[[f-minF+1,t-minT+1]]<-LCplfm(data=data,F=f,T=t,M=M,maprule=maprule,model=model,emcrit1=emcrit1,emcrit2=emcrit2,delta=delta,printrun=printrun)
+ stepLCplfm[[f-minF+1,t-minT+1]]<-LCplfm(data=data,F=f,T=t,M=M,maprule=maprule,model=model,emcrit1=emcrit1,emcrit2=emcrit2,delta=delta,printrun=printrun, Nbootstrap=Nbootstrap)
 
  tempcall$F<-as.numeric(f)
  tempcall$T<-as.numeric(t)
- if (maprule=="disj") tempcall$maprule<-"disj" else tempcall$maprule<-"conj"
+
+ if (maprule=="disj") tempcall$maprule<-"disj" 
+ else if (maprule=="conj") tempcall$maprule<-"conj"
+ else if (maprule=="add") tempcall$maprule<-"add"
+ 
  if (model==1) tempcall$model<-1
  else if (model==2) tempcall$model<-2
  else if (model==3) tempcall$model<-3
@@ -3803,9 +4934,10 @@ print.stepLCplfm<-function(x, ...)
  minT<-x[[1,1]]$call$T
  maxT<-x[[1,nT]]$call$T
 
- fitm<-t(sapply(x,function(obj) obj$fitmeasures))
- colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF")
+fitm<-t(sapply(x,function(obj) obj$fitmeasures))
+colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF","P.ORattpair.in95CI","P.ORobjpair.in95CI","P.ORattpair.in99CI","P.ORobjpair.in99CI")
  
+
  rowlab<-rep(" ",nT*nF)
   for (f in minF:maxF){
    for (t in minT:maxT){
@@ -3901,13 +5033,57 @@ print.stepLCplfm<-function(x, ...)
  cat("\n******************************\n")}
 
 
+ if ((x[[1,1]]$call$maprule=="add") & (x[[1,1]]$call$model==1)){
+ cat("\n*****************************") 
+ cat("\nADDITIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="add") & (x[[1,1]]$call$model==2)){
+ cat("\n*****************************") 
+ cat("\nADDITIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="add") & (x[[1,1]]$call$model==3)){
+ cat("\n*****************************") 
+ cat("\nADDITIVE MODEL")
+ cat("\nCONSTANT OBJECT CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT AND ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="add") & (x[[1,1]]$call$model==4)){
+ cat("\n*****************************") 
+ cat("\nADDITIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="add") & (x[[1,1]]$call$model==5)){
+ cat("\n*****************************") 
+ cat("\nADDITIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+
+ else if ((x[[1,1]]$call$maprule=="add") & (x[[1,1]]$call$model==6)){
+ cat("\n*****************************") 
+ cat("\nADDITIVE MODEL")
+ cat("\nCONSTANT ATTRIBUTE CLASSIFICATION")
+ cat("\nCLASS-SPECIFIC OBJECT AND ATTRIBUTE PARAMETERS")
+ cat("\n******************************\n")}
+ 
+
+
  cat("\nINFORMATION CRITERIA:\n")
  cat("\n")
  print(round(fitm[,c(1:5)],0))
 
  cat("\nDESCRIPTIVE FIT OBJECT X ATTRIBUTE TABLE:\n")
  cat("\n")
- print(round(fitm[,c(6,7)],3))
+ print(round(fitm[,c(6:11)],3))
 }
 
 ############################################
@@ -3925,8 +5101,10 @@ plot.stepLCplfm<-function(x,which="BIC",...){
 
  classlab<-paste("T=", seq(minT,maxT),sep="")
 
- fitm<-t(sapply(x,function(obj) obj$fitmeasures))
- colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF")
+
+fitm<-t(sapply(x,function(obj) obj$fitmeasures))
+colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF","P.ORattpair.in95CI","P.ORobjpair.in95CI","P.ORattpair.in99CI","P.ORobjpair.in99CI")
+ 
 
  minw<-min(fitm[,which])
  maxw<-max(fitm[,which])
@@ -3965,8 +5143,9 @@ summary.stepLCplfm<-function(object, ...)
  minT<-object[[1,1]]$call$T
  maxT<-object[[1,nT]]$call$T
 
- fitm<-t(sapply(object,function(obj) obj$fitmeasures))
- colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF")
+fitm<-t(sapply(object,function(obj) obj$fitmeasures))
+colnames(fitm)<-c("LogLik","LogPost","Deviance","AIC","BIC","Correlation","VAF","P.ORattpair.in95CI","P.ORobjpair.in95CI","P.ORattpair.in99CI","P.ORobjpair.in99CI")
+
  
  modelnr<-object[[1,1]]$call$model 
  

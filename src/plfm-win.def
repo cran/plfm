@@ -1,0 +1,9 @@
+LIBRARY plfm.dll
+EXPORTS 
+ R_init_plfm
+ PlFm_X_YZ_ADD  
+ PlFm_X_YZ_DC   
+ PlFm_XZ_Y_ADD  
+ PlFm_XZ_Y_DC   
+ PlFm_XZ_YZ_ADD 
+ PlFm_XZ_YZ_DC  

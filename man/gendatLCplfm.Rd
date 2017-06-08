@@ -1,7 +1,7 @@
 \name{gendatLCplfm}
 \alias{gendatLCplfm}
 \title{Data generation}
-\description{Data generation for disjunctive or conjunctive latent class probabilistic latent feature models.}
+\description{Data generation for disjunctive, conjunctive and additive latent class probabilistic latent feature models.}
 \usage{gendatLCplfm(N,objpar,attpar,sizepar,maprule="disj",model=1)}
 \arguments{
   \item{N}{Number of replications (e.g. persons) for which binary object-attribute associations are generated.}
@@ -10,7 +10,7 @@
   \item{attpar}{True attributeparameters. If \code{model}=2, \code{model}=3, \code{model}=5, or \code{model}=6 \code{attpar} is a \emph{K X F X T} array, 
                 if  \code{model}=1 or \code{model}=4 \code{attpar} is a \emph{K X F} matrix. As attribute parameters are probabilities they should be between 0 and 1.}
   \item{sizepar}{A \emph{T}-vector of true class size parameters.}
-  \item{maprule}{Disjunctive (\code{maprule="disj"}) or conjunctive (\code{maprule="conj"}) 
+  \item{maprule}{Disjunctive (\code{maprule="disj"}), conjunctive (\code{maprule="conj"}) or additive  (\code{maprule="add"}) 
 	        mapping rule of the latent class probabilistic latent feature model.}
   \item{model}{The type of dependency and heterogeneity assumption included in the model. \code{model}=1, \code{model}=2, \code{model}=3 represent models with a constant 
                object-feature classification per person and with, respectively, class-specific object parameters, class-specific attribute parameters, 
@@ -20,7 +20,7 @@
 }
 \details{
  The function \code{gendatLCplfm} generates binary object-attribute associations for \emph{N} replications 
-  according to a disjunctive or a conjunctive latent class probabilistic latent feature model of a specific model type. 
+  according to a disjunctive, conjunctive or additive latent class probabilistic latent feature model of a specific model type. 
   In addition, the function computes the \emph{J X K} matrix of marginal object-attribute association probabilities and
   a  \emph{J X K X T} array of class-specific object-attribute association probabilities.                      
   To compute association probabilities the function \emph{gendatLCplfm} uses a vector of class size parameters (\code{sizepar}) a matrix or array of 
@@ -39,6 +39,15 @@
  In particular, for \code{model=1},the class-specific object-attribute association probability in cell \emph{(j,k)} for the conjunctive model can be computed as:
 
 \deqn{p(j,k|t)=\prod_f(1-(1-objpar[j,f,t])*attpar[k,f]).}
+
+ 
+ According to the \emph{additive} probabilistic latent feature model, an object and an attribute are more likely to be associated if they have more features in common. 
+
+ In particular, for \code{model=1},the class-specific object-attribute association probability in cell \emph{(j,k)} for the additive model can be computed as:
+
+\deqn{p(j,k|t)= (1/F) * \sum_f(objpar[j,f,t])*attpar[k,f]).}
+
+
 
 The marginal object-attribute association probability can be computed as follows:
 
@@ -96,7 +105,7 @@ objpar<-array(runif(J*F*T),c(J,F,T))
 attpar<-array(runif(K*F*T),c(K,F,T))
 sizepar<-rep(1/T,T)
 # generate data
-d<-gendat.LCplfm(N=I,objpar=objpar,attpar=attpar,sizepar=sizepar,maprule="conj",model=3)
+d<-gendatLCplfm(N=I,objpar=objpar,attpar=attpar,sizepar=sizepar,maprule="conj",model=3)
 # estimate parameters of true model
 res<-LCplfm(data=d$data,F=2,T=2,model=3,maprule="conj")
 
@@ -107,7 +116,7 @@ objpar<-array(runif(J*F*T),c(J,F,T))
 attpar<-matrix(runif(K*F),c(K,F))
 sizepar<-rep(1/T,T)
 # generate data
-d<-gendat.LCplfm(N=I,objpar=objpar,attpar=attpar,sizepar=sizepar,maprule="conj",model=4)
+d<-gendatLCplfm(N=I,objpar=objpar,attpar=attpar,sizepar=sizepar,maprule="conj",model=4)
 # estimate parameters of true model
 res<-LCplfm(data=d$data,F=2,T=2,model=4,maprule="conj")
 
@@ -118,7 +127,7 @@ objpar<-matrix(runif(J*F),nrow=J)
 attpar<-array(runif(K*F*T),c(K,F,T))
 sizepar<-rep(1/T,T)
 # generate data
-d<-gendat.LCplfm(N=I,objpar=objpar,attpar=attpar,sizepar=sizepar,maprule="conj",model=5)
+d<-gendatLCplfm(N=I,objpar=objpar,attpar=attpar,sizepar=sizepar,maprule="conj",model=5)
 # estimate parameters of true model
 res<-LCplfm(data=d$data,F=2,T=2,model=5,maprule="conj")
 

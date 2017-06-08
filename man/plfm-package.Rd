@@ -3,14 +3,14 @@
 \docType{package}
 \title{Probabilistic Latent Feature Analysis}
 \description{
-Functions for estimating disjunctive or conjunctive probabilistic latent feature models on (aggregated) binary three-way data
+Functions for estimating disjunctive, conjunctive or additive probabilistic latent feature models on (aggregated) binary three-way data
 }
 \details{
 \tabular{ll}{
 Package: \tab plfm\cr
 Type: \tab Package\cr
-Version: \tab 2.1\cr
-Date: \tab 2015-12-16\cr
+Version: \tab 2.2\cr
+Date: \tab 2017-06-07\cr
 License: \tab GPL(>=2)\cr
 LazyLoad: \tab yes\cr
 }
@@ -21,7 +21,7 @@ data as input, namely the two-way two-mode frequency table that is obtained by s
 (Maris, De Boeck and Van Mechelen, 1996) is based
 on the assumption that observations are statistically independent and that model parameters are homogeneous across persons. The \code{\link{plfm}} function can be used to locate 
 the posterior mode(s) of basic probabilistic feature models, and to compute information criteria for model selection, and measures of statistical and descriptive model fit. 
-The \code{\link{stepplfm}} function can be used to fit a series of disjunctive and/or conjunctive basic probabilistic feature models with different number of latent features. 
+The \code{\link{stepplfm}} function can be used to fit a series of disjunctive, conjunctive or additive basic probabilistic feature models with different number of latent features. 
 In addition, the \code{\link{bayesplfm}} function can be used to compute a sample of the posterior distribution of the basic probabilistic feature model 
 in the neigbourhood of a specific posterior mode.
  
