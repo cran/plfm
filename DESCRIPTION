@@ -1,8 +1,8 @@
 Package: plfm
 Type: Package
 Title: Probabilistic Latent Feature Analysis
-Version: 2.2
-Date: 2017-06-07
+Version: 2.2.1
+Date: 2017-06-09
 Authors@R: c(
     person("Michel", "Meulders", email = "michel.meulders@kuleuven.be", role = c("aut","cre")),
     person("Philippe", "De Bruecker", email = "philippe.debruecker@kuleuven.be", role = "ctb"))
@@ -15,5 +15,5 @@ Repository: CRAN
 LazyLoad: yes
 LazyData: yes
 NeedsCompilation: yes
-Packaged: 2017-06-08 19:06:39 UTC; michel.meulders
-Date/Publication: 2017-06-08 20:00:08 UTC
+Packaged: 2017-06-09 09:35:50 UTC; michel.meulders
+Date/Publication: 2017-06-09 10:29:52 UTC

@@ -16,7 +16,6 @@
 #include <cstring>
 #include <string.h>
 #include <stdio.h>
-#include <conio.h>
 #include <stdlib.h> // for NULL
 #include <fstream>
 #include <R.h>

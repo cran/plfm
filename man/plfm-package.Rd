@@ -9,8 +9,8 @@ Functions for estimating disjunctive, conjunctive or additive probabilistic late
 \tabular{ll}{
 Package: \tab plfm\cr
 Type: \tab Package\cr
-Version: \tab 2.2\cr
-Date: \tab 2017-06-07\cr
+Version: \tab 2.2.1\cr
+Date: \tab 2017-06-09\cr
 License: \tab GPL(>=2)\cr
 LazyLoad: \tab yes\cr
 }
