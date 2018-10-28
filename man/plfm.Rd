@@ -112,6 +112,9 @@ Meulders, M., De Boeck, P., Van Mechelen, I., Gelman, A., and Maris, E. (2001). 
 Meulders, M., De Boeck, P., Van Mechelen, I., and Gelman, A. (2005). Probabilistic feature analysis of facial perception of emotions. 
 \emph{Applied Statistics, 54}, 781-793.
 
+Meulders, M. and De Bruecker, P. (2018). Latent class probabilistic latent feature analysis of three-way three-mode binary data. 
+\emph{Journal of Statistical Software, 87(1)}, 1-45.
+
 Meulders, M. (2013). An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies. \emph{Journal of Statistical Software, 54(14)}, 1-29. 
    URL http://www.jstatsoft.org/v54/i14/.
 

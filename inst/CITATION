@@ -1,19 +1,23 @@
-citHeader("To cite plfm in publications use:")
-
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "An {R} Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies",
-  author       = personList(as.person("Michel Meulders")),
+  author       = person(given = "Michel", family = "Meulders", email = "michel.meulders@kuleuven.be"),
   journal      = "Journal of Statistical Software",
   year         = "2013",
   volume       = "54",
   number       = "14",
   pages        = "1--29",
-  url          = "http://www.jstatsoft.org/v54/i14/",
-
-  textVersion  =
-  paste("Michel Meulders (2013).",
-        "An R Package for Probabilistic Latent Feature Analysis of Two-Way Two-Mode Frequencies.",
-        "Journal of Statistical Software, 54(14), 1-29.",
-        "URL http://www.jstatsoft.org/v54/i14/.")
+  doi          = "10.18637/jss.v054.i14",
+  header       = "To cite plfm in publications use:"
 )
 
+bibentry(bibtype = "Article",
+  title        = "Latent Class Probabilistic Latent Feature Analysis of Three-Way Three-Mode Binary Data",
+  author       = c(person(given = "Michel", family = "Meulders", email = "michel.meulders@kuleuven.be"),
+                   person(given = "Philippe", family = "De Bruecker")),
+  journal      = "Journal of Statistical Software",
+  year         = "2018",
+  volume       = "87",
+  number       = "1",
+  pages        = "1--45",
+  doi          = "10.18637/jss.v087.i01"
+)

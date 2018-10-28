@@ -15,5 +15,8 @@
 }
 }
 \source{M\"ahler, R. (2014). \emph{Analyse van perceptie en preferentie van middelgrote wagens.} [translation from Dutch: Analysis of perception and preference for midsize cars.] 
-        Master thesis. KU Leuven.} 
+        Master thesis. KU Leuven.}
+\references{Meulders, M. and De Bruecker, P. (2018). Latent class probabilistic latent feature analysis of three-way three-mode binary data. 
+\emph{Journal of Statistical Software, 87(1)}, 1-45.
+} 
 \keyword{datasets}

@@ -9,8 +9,8 @@ Functions for estimating disjunctive, conjunctive or additive probabilistic late
 \tabular{ll}{
 Package: \tab plfm\cr
 Type: \tab Package\cr
-Version: \tab 2.2.1\cr
-Date: \tab 2017-06-09\cr
+Version: \tab 2.2.2\cr
+Date: \tab 2018-10-27\cr
 License: \tab GPL(>=2)\cr
 LazyLoad: \tab yes\cr
 }
@@ -71,6 +71,9 @@ Meulders, M., De Boeck, P., Van Mechelen, I., and Gelman, A. (2005). Probabilist
 
 Meulders, M., De Boeck, P., Van Mechelen, I., Gelman, A., and Maris, E. (2001). Bayesian inference with probability matrix decomposition models. 
 \emph{Journal of Educational and Behavioral Statistics, 26}, 153-179.
+
+Meulders, M. and De Bruecker, P. (2018). Latent class probabilistic latent feature analysis of three-way three-mode binary data. 
+\emph{Journal of Statistical Software, 87(1)}, 1-45.
 
 Meulders, M., Gelman, A., Van Mechelen, I., and De Boeck P. (1998). Generalizing the probability matrix decomposition model: 
 An example of Bayesian model checking and model expansion. 

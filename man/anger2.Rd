@@ -35,4 +35,7 @@
 }
 \source{Kuppens, P., Van Mechelen, I., and Meulders, M. (2004). Every cloud has a silver lining: 
    Interpersonal and individual differences determinants of anger-related behaviors. \emph{Personality and Social Psychology Bulletin, 30}, 1550-1564.}
+\references{Meulders, M. and De Bruecker, P. (2018). Latent class probabilistic latent feature analysis of three-way three-mode binary data. 
+  \emph{Journal of Statistical Software, 87(1), 1-45}, 1-29.
+}
 \keyword{datasets}
