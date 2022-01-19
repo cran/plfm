@@ -1,4 +1,4 @@
-ed743e676e5f947002eab09aaa5c7104 *DESCRIPTION
+11241962da6297a63fa3901502ca8e92 *DESCRIPTION
 a8014d467451139a3a38762640a858c4 *NAMESPACE
 27933abb898a06d6eebded04ef7ac674 *R/plfm.R
 fb876fce55d87ef6a3e493c55864ab72 *data/anger.rda
@@ -37,6 +37,6 @@ b110614bc2f2820d46e1ef3c7be20e36 *man/summary.bayesplfm.Rd
 a78cd111fe271fcc4dcd7cf77f3051ce *man/summary.plfm.Rd
 47225d34c6a5c44ef7f82dff90e0c153 *man/summary.stepLCplfm.Rd
 400ea755f36831446be8fba60e59ca4d *man/summary.stepplfm.Rd
-923c7d584d8a26a9da45dcc594a3f406 *src/main.cpp
+157c867649574b1296bcec3854181a3d *src/main.cpp
 d4c75e0e936aee8365b602bf36b6f36b *src/plfm-win.def
 dd7c32ce2f860ba3952f127bf5cfdc62 *src/registerDynamicSymbol.cpp

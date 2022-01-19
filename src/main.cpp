@@ -8169,7 +8169,7 @@ void generate_data_fixedobject_XZ_Y_DC(extended1 ga, extended3 ro , extended2 ta
 				}
 				prod = 1;
 				for (int f = 1; f <= _nF; f++)
-					prod = prod * ( 1 - latx[f] * laty[f] );
+					prod = prod && ( 1 - latx[f] && laty[f] );
 				data[j][k][i] = 1 - prod;
 			}
 		}
@@ -8231,7 +8231,7 @@ void generate_data_fixedobject_X_YZ_DC(extended1 ga, extended2 ro , extended3 ta
 				}
 				prod = 1;
 				for (int f = 1; f <= _nF; f++)
-					prod = prod * ( 1 - latx[f] * laty[f] );
+					prod = prod && ( 1 - latx[f] && laty[f] );
 				data[j][k][i] = 1 - prod;
 			}
 		}
@@ -8295,7 +8295,7 @@ void generate_data_fixedobject_XZ_YZ_DC(extended1 ga, extended3 ro , extended3 t
 				}
 				prod = 1;
 				for (int f = 1; f <= _nF; f++)
-					prod = prod * ( 1 - latx[f] * laty[f] );
+					prod = prod && ( 1 - latx[f] && laty[f] );
 				data[j][k][i] = 1 - prod;
 			}
 		}
