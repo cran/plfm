@@ -29,17 +29,18 @@
  More specifically, the association probability in cell \emph{(j,k)} for the disjunctive model 
  can be computed as: 
 
-\deqn{p(j,k)=1-\prod_f(1-objpar[j,f]*attpar[k,f]).}
+\deqn{p(j,k)=1-\prod_f(1-objpar[j,f]*attpar[k,f]).}{p(j,k)=1-\prod_f(1-objpar[j,f]*attpar[k,f]).}
  
  According to the \emph{conjunctive} probabilistic latent feature model, object \emph{j} and attribute \emph{k} 
  are associated if object \emph{j} has all the features that are linked to attribute \emph{k}. 
  For the conjunctive model the association probability in cell \emph{(j,k)} is computed as:
 
-\deqn{p(j,k)=\prod_f(1-(1-objpar[j,f])*attpar[k,f]).}
+\deqn{p(j,k)=\prod_f(1-(1-objpar[j,f])*attpar[k,f]).}{p(j,k)=\prod_f(1-(1-objpar[j,f])*attpar[k,f]).}
 
  The \emph{additive} mapping rule states that an object and attribute are more likely to associated if they have more common features. More specifically, 
- the association probability for the additive model is computed as
- \deqn{p(j,k)= (1/F) * \sum_f (objpar[j,f])*attpar[k,f]) }
+ the association probability for the additive model is computed as:
+
+ \deqn{p(j,k)= \frac{1}{F}*\sum_f (objpar[j,f])*attpar[k,f]).}{p(j,k)= (1/F) * \sum_f (objpar[j,f])*attpar[k,f]).}
 
 }
 \value{

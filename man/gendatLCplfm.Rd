@@ -31,27 +31,26 @@
  More specifically, for \code{model=1} the class-specific object-attribute association probability in cell \emph{(j,k)} for the disjunctive model 
  can be computed as: 
 
-\deqn{p(j,k|t)=1-\prod_f(1-objpar[j,f,t]*attpar[k,f]).}
+\deqn{p(j,k|t)=1-\prod_f(1-objpar[j,f,t]*attpar[k,f]).}{p(j,k|t)=1-\prod_f(1-objpar[j,f,t]*attpar[k,f]).}
  
  According to the \emph{conjunctive} probabilistic latent feature model, object \emph{j} and attribute \emph{k} 
  are associated if object \emph{j} has all the features that are linked to attribute \emph{k}. 
 
  In particular, for \code{model=1},the class-specific object-attribute association probability in cell \emph{(j,k)} for the conjunctive model can be computed as:
 
-\deqn{p(j,k|t)=\prod_f(1-(1-objpar[j,f,t])*attpar[k,f]).}
+\deqn{p(j,k|t)=\prod_f(1-(1-objpar[j,f,t])*attpar[k,f]).}{p(j,k|t)=\prod_f(1-(1-objpar[j,f,t])*attpar[k,f]).}
 
  
  According to the \emph{additive} probabilistic latent feature model, an object and an attribute are more likely to be associated if they have more features in common. 
 
  In particular, for \code{model=1},the class-specific object-attribute association probability in cell \emph{(j,k)} for the additive model can be computed as:
 
-\deqn{p(j,k|t)= (1/F) * \sum_f(objpar[j,f,t])*attpar[k,f]).}
-
+\deqn{p(j,k|t)= \frac{1}{F} * \sum_f(objpar[j,f,t])*attpar[k,f]).}{p(j,k|t)= (1/F) * \sum_f(objpar[j,f,t])*attpar[k,f]).}
 
 
 The marginal object-attribute association probability can be computed as follows:
 
-\deqn{p(j,k)=\sum_t sizepar[t]*p(j,k|t).}
+\deqn{p(j,k)=\sum_t sizepar[t]*p(j,k|t).}{p(j,k)=\sum_t sizepar[t]*p(j,k|t).}
 }
 \value{
 \item{call}{Parameters used to call the function.}

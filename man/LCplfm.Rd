@@ -78,17 +78,17 @@ LCplfm(data,F=2,T=2,M=5,maprule="disj",emcrit1=1e-3,emcrit2=1e-8,
         bootstrap procedure is used to evaluate whether observed dependencies are within the simulated 95 or 99 percent confidence interval. Let \emph{D(i,j,k)} be equal to 1 if rater i
         indicates that object \emph{j} is associated to attribute \emph{k}. The statistical dependency between pairs \emph{(j,k)} and \emph{(j*,k*)} is measured with the odds ratio (OR) statistic: 
 
-       \deqn{ OR(j,k,j*,k*)=log((N11*N00)/(N10*N01))}
+       \deqn{OR(j,k,j^{*},k^{*})=\mbox{log}\left\lbrack\frac{N_{11}*N_{00}}{N_{10}*N_{01}}\right\rbrack}{OR(j,k,j*,k*)=log((N11*N00)/(N10*N01))}
 
         with 
         
-             \deqn{N11=\sum_i D(i,j,k) D(i,j*,k*) +0.5 }
+             \deqn{N_{11}=\sum_i D(i,j,k) D(i,j^{*},k^{*}) +0.5}{N11=\sum_i D(i,j,k) D(i,j*,k*) +0.5}
  
-             \deqn{N00=\sum_i (1-D(i,j,k)) (1-D(i,j*,k*)) +0.5 } 
+             \deqn{N_{00}=\sum_i (1-D(i,j,k)) (1-D(i,j^{*},k^{*})) +0.5}{N00=\sum_i (1-D(i,j,k)) (1-D(i,j*,k*)) +0.5} 
 
-             \deqn{N10=\sum_i D(i,j,k) (1-D(i,j*,k*)) +0.5 }
+             \deqn{N_{10}=\sum_i D(i,j,k) (1-D(i,j^{*},k^{*})) +0.5}{N10=\sum_i D(i,j,k) (1-D(i,j*,k*)) +0.5}
    
-             \deqn{N01=\sum_i (1-D(i,j,k)) D(i,j*,k*) +0.5 }
+             \deqn{N_{01}=\sum_i (1-D(i,j,k)) D(i,j^{*},k^{*}) +0.5}{N01=\sum_i (1-D(i,j,k)) D(i,j*,k*) +0.5}
 
 
 	The model selection criteria AIC and BIC, the descriptive goodness-of-fit measures  (correlation observed and expected frequencies, and VAF) and a summary of the OR dependency measures 

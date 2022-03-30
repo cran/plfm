@@ -946,12 +946,12 @@ extern "C" void PlFm_XZ_Y_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_n
 		}
 		delete R_data[i];
 	}
-	delete R_data;
+	delete [] R_data ;
 	for (int i = 0; i < _nS+1; i++)
 	{
 		delete R_patS[i];
 	}
-	delete R_patS;
+	delete [] R_patS ;
 
 	for (int i = 0; i < _nO+1; i++)
 	{
@@ -965,9 +965,9 @@ extern "C" void PlFm_XZ_Y_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_n
 		delete R_ro_n[i];
 		delete R_ro_update[i];
 	}
-	delete R_ro_o;
-	delete R_ro_n;
-	delete R_ro_update;
+	delete [] R_ro_o ;
+	delete [] R_ro_n ;
+	delete [] R_ro_update ;
 	
 	for (int i = 0; i < _nA+1; i++)
 	{
@@ -975,17 +975,17 @@ extern "C" void PlFm_XZ_Y_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_n
 		delete R_ta_n[i];
 		delete R_ta_update[i];
 	}
-	delete R_ta_o;
-	delete R_ta_n;
-	delete R_ta_update;	
-	delete R_ga_o;
-	delete R_ga_n;
+	delete [] R_ta_o;
+	delete [] R_ta_n;
+	delete [] R_ta_update;	
+	delete [] R_ga_o;
+	delete [] R_ga_n;
 
 	for (int i = 0; i < _nT+1; i++)
 	{
 		delete probmat[i];
 	}
-	delete probmat;
+	delete [] probmat;
 
 	if (flag == true)
 	{
@@ -1447,21 +1447,21 @@ extern "C" void PlFm_X_YZ_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_n
 		}
 		delete R_data[i];
 	}
-	delete R_data;
+	delete [] R_data;
 	for (int i = 0; i < _nS+1; i++)
 	{
 		delete R_patS[i];
 	}
-	delete R_patS;
+	delete [] R_patS;
 	for (int i = 0; i < _nO+1; i++)
 	{
 		delete R_ro_o[i];
 		delete R_ro_n[i];
 		delete R_ro_update[i];
 	}
-	delete R_ro_o;
-	delete R_ro_n;
-	delete R_ro_update;
+	delete [] R_ro_o;
+	delete [] R_ro_n;
+	delete [] R_ro_update;
 	
 	for (int i = 0; i < _nA+1; i++)
 	{
@@ -1475,17 +1475,17 @@ extern "C" void PlFm_X_YZ_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_n
 		delete R_ta_n[i];
 		delete R_ta_update[i];
 	}
-	delete R_ta_o;
-	delete R_ta_n;
-	delete R_ta_update;
-	delete R_ga_o;
-	delete R_ga_n;
+	delete [] R_ta_o;
+	delete [] R_ta_n;
+	delete [] R_ta_update;
+	delete [] R_ga_o;
+	delete [] R_ga_n;
 
 	for (int i = 0; i < _nT+1; i++)
 	{
 		delete probmat[i];
 	}
-	delete probmat;
+	delete [] probmat;
 
 	if (flag == true)
 	{
@@ -1970,12 +1970,12 @@ extern "C" void PlFm_XZ_YZ_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		}
 		delete R_data[i];
 	}
-	delete R_data;
+	delete [] R_data;
 	for (int i = 0; i < _nS+1; i++)
 	{
 		delete R_patS[i];
 	}
-	delete R_patS;
+	delete [] R_patS;
 	for (int i = 0; i < _nO+1; i++)
 	{
 		for (int ii = 0; ii < _nF+1; ii++)
@@ -1988,9 +1988,9 @@ extern "C" void PlFm_XZ_YZ_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		delete R_ro_n[i];
 		delete R_ro_update[i];
 	}
-	delete R_ro_o;
-	delete R_ro_n;
-	delete R_ro_update;
+	delete [] R_ro_o;
+	delete [] R_ro_n;
+	delete [] R_ro_update;
 	for (int i = 0; i < _nA+1; i++)
 	{
 		for (int ii = 0; ii < _nF+1; ii++)
@@ -2003,17 +2003,17 @@ extern "C" void PlFm_XZ_YZ_DC(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		delete R_ta_n[i];
 		delete R_ta_update[i];
 	}
-	delete R_ta_o;
-	delete R_ta_n;
-	delete R_ta_update;
-	delete R_ga_o;
-	delete R_ga_n;
+	delete [] R_ta_o;
+	delete [] R_ta_n;
+	delete [] R_ta_update;
+	delete [] R_ga_o;
+	delete [] R_ga_n;
 
 	for (int i = 0; i < _nT+1; i++)
 	{
 		delete probmat[i];
 	}
-	delete probmat;
+	delete [] probmat;
 
 	if (flag == true)
 	{
@@ -2809,12 +2809,12 @@ extern "C" void PlFm_XZ_Y_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		}
 		delete R_data[i];
 	}
-	delete R_data;
+	delete [] R_data;
 	for (int i = 0; i < _nS+1; i++)
 	{
 		delete R_patS[i];
 	}
-	delete R_patS;
+	delete [] R_patS;
 
 	for (int i = 0; i < _nO+1; i++)
 	{
@@ -2828,9 +2828,9 @@ extern "C" void PlFm_XZ_Y_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		delete R_ro_n[i];
 		delete R_ro_update[i];
 	}
-	delete R_ro_o;
-	delete R_ro_n;
-	delete R_ro_update;
+	delete [] R_ro_o;
+	delete [] R_ro_n;
+	delete [] R_ro_update;
 	
 	for (int i = 0; i < _nA+1; i++)
 	{
@@ -2838,17 +2838,17 @@ extern "C" void PlFm_XZ_Y_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		delete R_ta_n[i];
 		delete R_ta_update[i];
 	}
-	delete R_ta_o;
-	delete R_ta_n;
-	delete R_ta_update;	
-	delete R_ga_o;
-	delete R_ga_n;
+	delete [] R_ta_o;
+	delete [] R_ta_n;
+	delete [] R_ta_update;	
+	delete [] R_ga_o;
+	delete [] R_ga_n;
 
 	for (int i = 0; i < _nT+1; i++)
 	{
 		delete probmat[i];
 	}
-	delete probmat;
+	delete [] probmat;
 
 	if (flag == true)
 	{
@@ -3311,21 +3311,21 @@ extern "C" void PlFm_X_YZ_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		}
 		delete R_data[i];
 	}
-	delete R_data;
+	delete [] R_data;
 	for (int i = 0; i < _nS+1; i++)
 	{
 		delete R_patS[i];
 	}
-	delete R_patS;
+	delete [] R_patS;
 	for (int i = 0; i < _nO+1; i++)
 	{
 		delete R_ro_o[i];
 		delete R_ro_n[i];
 		delete R_ro_update[i];
 	}
-	delete R_ro_o;
-	delete R_ro_n;
-	delete R_ro_update;
+	delete [] R_ro_o;
+	delete [] R_ro_n;
+	delete [] R_ro_update;
 	
 	for (int i = 0; i < _nA+1; i++)
 	{
@@ -3339,17 +3339,17 @@ extern "C" void PlFm_X_YZ_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R_
 		delete R_ta_n[i];
 		delete R_ta_update[i];
 	}
-	delete R_ta_o;
-	delete R_ta_n;
-	delete R_ta_update;
-	delete R_ga_o;
-	delete R_ga_n;
+	delete []  R_ta_o;
+	delete []  R_ta_n;
+	delete []  R_ta_update;
+	delete []  R_ga_o;
+	delete []  R_ga_n;
 
 	for (int i = 0; i < _nT+1; i++)
 	{
 		delete probmat[i];
 	}
-	delete probmat;
+	delete [] probmat;
 
 	if (flag == true)
 	{
@@ -3834,12 +3834,12 @@ extern "C" void PlFm_XZ_YZ_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R
 		}
 		delete R_data[i];
 	}
-	delete R_data;
+	delete [] R_data;
 	for (int i = 0; i < _nS+1; i++)
 	{
 		delete R_patS[i];
 	}
-	delete R_patS;
+	delete [] R_patS;
 	for (int i = 0; i < _nO+1; i++)
 	{
 		for (int ii = 0; ii < _nF+1; ii++)
@@ -3852,9 +3852,9 @@ extern "C" void PlFm_XZ_YZ_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R
 		delete R_ro_n[i];
 		delete R_ro_update[i];
 	}
-	delete R_ro_o;
-	delete R_ro_n;
-	delete R_ro_update;
+	delete [] R_ro_o;
+	delete [] R_ro_n;
+	delete [] R_ro_update;
 	for (int i = 0; i < _nA+1; i++)
 	{
 		for (int ii = 0; ii < _nF+1; ii++)
@@ -3867,17 +3867,17 @@ extern "C" void PlFm_XZ_YZ_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R
 		delete R_ta_n[i];
 		delete R_ta_update[i];
 	}
-	delete R_ta_o;
-	delete R_ta_n;
-	delete R_ta_update;
-	delete R_ga_o;
-	delete R_ga_n;
+	delete []  R_ta_o;
+	delete []  R_ta_n;
+	delete []  R_ta_update;
+	delete []  R_ga_o;
+	delete []  R_ga_n;
 
 	for (int i = 0; i < _nT+1; i++)
 	{
 		delete probmat[i];
 	}
-	delete probmat;
+	delete [] probmat;
 
 	if (flag == true)
 	{
@@ -3970,7 +3970,7 @@ extern "C" void PlFm_XZ_YZ_ADD(int * _R_data, int * _R_nR, int * _R_nO, int * _R
 
 long double pow_1(long double grondtal, binary exponent)
 {
-	if((exponent==0)   ) 
+	if (exponent==0)    
 		return (1-grondtal); 
 	else 
 		return grondtal;
@@ -3978,7 +3978,7 @@ long double pow_1(long double grondtal, binary exponent)
 
 long double pow_2(long double grondtal, binary exponent)
 {
-	if((exponent==0)   ) 
+	if (exponent==0)   
 		return 1;
 	else 
 		return grondtal;
@@ -3987,18 +3987,18 @@ long double pow_2(long double grondtal, binary exponent)
 long double pow_3(unsigned short int x, unsigned short int a, extended2 condprobx, binary exponent)
 {
 	// XZ_Y
-	if(((exponent==1) &&  (x==1))   ) return 1.0;
-	else if(((exponent==1) &&  (x>1))   ) return condprobx[x][a];
-	else if((exponent==0)     ) return 1.0 -condprobx[x][a];
+	if ((exponent==1) &&  (x==1))    return 1.0;
+	else if ((exponent==1) &&  (x>1))  return condprobx[x][a];
+	else if (exponent==0)  return 1.0 -condprobx[x][a];
 	return 0.0;
 }
 
 long double pow_3(unsigned short int x, unsigned short int a,unsigned short int t, extended3 condprobx, binary exponent)
 {
 	// X_YZ
-	if(((exponent==1) &&  (x==1))   ) return 1.0;
-	else if(((exponent==1) &&  (x>1))   ) return condprobx[x][a][t];
-	else if((exponent==0)     ) return 1.0 -condprobx[x][a][t];
+	if ((exponent==1) &&  (x==1))    return 1.0;
+	else if ((exponent==1) &&  (x>1))   return condprobx[x][a][t];
+	else if (exponent==0)    return 1.0 -condprobx[x][a][t];
 	return 0.0;
 }
 
@@ -4292,43 +4292,43 @@ long double logposterior (extended3 ro, extended3 ta, extended1 ga, extended3 co
 // as a function of the number of latent features
 void calculate_dims(void)
 {
-	if(_nF==1   )
+	if (_nF==1   )
 	{ 
 	_nS= 2;
 	}  
-	else if(_nF==2   )
+	else if (_nF==2   )
 	{ 
 	_nS= 4;
 	}  
-	else if(_nF==3   )
+	else if (_nF==3   )
 	{ 
 	_nS= 8;
 	}  
-	else if(_nF==4   )
+	else if (_nF==4   )
 	{ 
 	_nS= 16;
 	}  
-	else if(_nF==5   )
+	else if (_nF==5   )
 	{ 
 	_nS= 32;
 	}  
-	else if(_nF==6   )
+	else if (_nF==6   )
 	{ 
 	_nS= 64;
 	}  
-	else if(_nF==7   )
+	else if (_nF==7   )
 	{ 
 	_nS= 128;
 	}
-    else if(_nF==8   )
+    else if (_nF==8   )
 	{ 
 	_nS= 256;
 	}
-    else if(_nF==9   )
+    else if (_nF==9   )
 	{ 
 	_nS= 512;
 	} 
-    else if(_nF==10   )
+    else if (_nF==10   )
 	{ 
 	_nS= 1024;
 	} 
@@ -5176,7 +5176,7 @@ void update_emta_ADD(extended2 condprobx, extended2 ta_o, extended2 ta_n, extend
 	sum2= 0;
 	for( o= 1; o<=_nO; o++)  { 
 	for( s= 1; s<=_nS; s++)  { 
-		if((patS[s][f]==0))
+		if (patS[s][f]==0)
 			py= 0; 
 		else  { 
 		if (data[o][a][r]==0) 
@@ -6028,7 +6028,7 @@ double rgamma_best(double a)
 			}  
 		} 
 	}
-	while( accept==1);
+	while (accept==1);
 	return X;
 
 } 
@@ -7350,14 +7350,14 @@ void bootstrap_dependency_XZ_Y_DC(binary3 dataobs, extended3 ro, extended2 ta, e
 		{
 			delete OR_common_att_obs[i];
 		}
-		delete 	OR_common_att_obs;
+		delete [] OR_common_att_obs;
 	
 	// OR_common_obj_obs	
 		for (int i = 0; i < _nA+1; i++)
 		{
 			delete OR_common_obj_obs[i];
 		}
-		delete 	OR_common_obj_obs;
+		delete [] OR_common_obj_obs;
 		
 		//delete cumul;
 		//delete latklas;	
@@ -7371,21 +7371,21 @@ void bootstrap_dependency_XZ_Y_DC(binary3 dataobs, extended3 ro, extended2 ta, e
 			}
 			delete datarep[i];
 		}
-		delete datarep;
+		delete [] datarep;
 
       // mean_OR_common_att
 	  for (int i = 0; i < _nO+1; i++)
 		{
 			delete mean_OR_common_att[i];
 		}
-		delete 	mean_OR_common_att;
+		delete [] mean_OR_common_att;
 		
 	  // mean_OR_common_obj	
 	  for (int i = 0; i < _nA+1; i++)
 		{
 			delete mean_OR_common_obj[i];
 		}
-		delete 	mean_OR_common_obj;
+		delete [] mean_OR_common_obj;
  
 
 }
@@ -7479,14 +7479,14 @@ void bootstrap_dependency_X_YZ_DC(binary3 dataobs, extended2 ro, extended3 ta, e
 		{
 			delete OR_common_att_obs[i];
 		}
-		delete 	OR_common_att_obs;
+		delete [] OR_common_att_obs;
 	
 	// OR_common_obj_obs	
 		for (int i = 0; i < _nA+1; i++)
 		{
 			delete OR_common_obj_obs[i];
 		}
-		delete 	OR_common_obj_obs;
+		delete [] OR_common_obj_obs;
 		
 		//delete cumul;
 		//delete latklas;	
@@ -7500,21 +7500,21 @@ void bootstrap_dependency_X_YZ_DC(binary3 dataobs, extended2 ro, extended3 ta, e
 			}
 			delete datarep[i];
 		}
-		delete datarep;
+		delete [] datarep;
 
       // mean_OR_common_att
 	  for (int i = 0; i < _nO+1; i++)
 		{
 			delete mean_OR_common_att[i];
 		}
-		delete 	mean_OR_common_att;
+		delete [] mean_OR_common_att;
 		
 	  // mean_OR_common_obj	
 	  for (int i = 0; i < _nA+1; i++)
 		{
 			delete mean_OR_common_obj[i];
 		}
-		delete 	mean_OR_common_obj;
+		delete [] mean_OR_common_obj;
  
 
 }
@@ -7610,14 +7610,14 @@ void bootstrap_dependency_XZ_YZ_DC(binary3 dataobs, extended3 ro, extended3 ta, 
 		{
 			delete OR_common_att_obs[i];
 		}
-		delete 	OR_common_att_obs;
+		delete [] OR_common_att_obs;
 	
 	// OR_common_obj_obs	
 		for (int i = 0; i < _nA+1; i++)
 		{
 			delete OR_common_obj_obs[i];
 		}
-		delete 	OR_common_obj_obs;
+		delete [] OR_common_obj_obs;
 		
 	
 		
@@ -7630,21 +7630,21 @@ void bootstrap_dependency_XZ_YZ_DC(binary3 dataobs, extended3 ro, extended3 ta, 
 			}
 			delete datarep[i];
 		}
-		delete datarep;
+		delete [] datarep;
 
       // mean_OR_common_att
 	  for (int i = 0; i < _nO+1; i++)
 		{
 			delete mean_OR_common_att[i];
 		}
-		delete 	mean_OR_common_att;
+		delete [] mean_OR_common_att;
 		
 	  // mean_OR_common_obj	
 	  for (int i = 0; i < _nA+1; i++)
 		{
 			delete mean_OR_common_obj[i];
 		}
-		delete 	mean_OR_common_obj;
+		delete [] mean_OR_common_obj;
  
 
 }
@@ -7740,14 +7740,14 @@ void bootstrap_dependency_XZ_Y_ADD(binary3 dataobs, extended3 ro, extended2 ta, 
 		{
 			delete OR_common_att_obs[i];
 		}
-		delete 	OR_common_att_obs;
+		delete [] OR_common_att_obs;
 	
 	// OR_common_obj_obs	
 		for (int i = 0; i < _nA+1; i++)
 		{
 			delete OR_common_obj_obs[i];
 		}
-		delete 	OR_common_obj_obs;
+		delete [] OR_common_obj_obs;
 		
 		//delete cumul;
 		//delete latklas;	
@@ -7761,21 +7761,21 @@ void bootstrap_dependency_XZ_Y_ADD(binary3 dataobs, extended3 ro, extended2 ta, 
 			}
 			delete datarep[i];
 		}
-		delete datarep;
+		delete [] datarep;
 
       // mean_OR_common_att
 	  for (int i = 0; i < _nO+1; i++)
 		{
 			delete mean_OR_common_att[i];
 		}
-		delete 	mean_OR_common_att;
+		delete [] mean_OR_common_att;
 		
 	  // mean_OR_common_obj	
 	  for (int i = 0; i < _nA+1; i++)
 		{
 			delete mean_OR_common_obj[i];
 		}
-		delete 	mean_OR_common_obj;
+		delete [] mean_OR_common_obj;
  
 
 }
@@ -7869,14 +7869,14 @@ void bootstrap_dependency_X_YZ_ADD(binary3 dataobs, extended2 ro, extended3 ta, 
 		{
 			delete OR_common_att_obs[i];
 		}
-		delete 	OR_common_att_obs;
+		delete [] OR_common_att_obs;
 	
 	// OR_common_obj_obs	
 		for (int i = 0; i < _nA+1; i++)
 		{
 			delete OR_common_obj_obs[i];
 		}
-		delete 	OR_common_obj_obs;
+		delete [] OR_common_obj_obs;
 		
 		//delete cumul;
 		//delete latklas;	
@@ -7890,21 +7890,21 @@ void bootstrap_dependency_X_YZ_ADD(binary3 dataobs, extended2 ro, extended3 ta, 
 			}
 			delete datarep[i];
 		}
-		delete datarep;
+		delete [] datarep;
 
       // mean_OR_common_att
 	  for (int i = 0; i < _nO+1; i++)
 		{
 			delete mean_OR_common_att[i];
 		}
-		delete 	mean_OR_common_att;
+		delete [] mean_OR_common_att;
 		
 	  // mean_OR_common_obj	
 	  for (int i = 0; i < _nA+1; i++)
 		{
 			delete mean_OR_common_obj[i];
 		}
-		delete 	mean_OR_common_obj;
+		delete [] mean_OR_common_obj;
  
 
 }
@@ -8000,14 +8000,14 @@ void bootstrap_dependency_XZ_YZ_ADD(binary3 dataobs, extended3 ro, extended3 ta,
 		{
 			delete OR_common_att_obs[i];
 		}
-		delete 	OR_common_att_obs;
+		delete [] OR_common_att_obs;
 	
 	// OR_common_obj_obs	
 		for (int i = 0; i < _nA+1; i++)
 		{
 			delete OR_common_obj_obs[i];
 		}
-		delete 	OR_common_obj_obs;
+		delete [] OR_common_obj_obs;
 		
 	
 		
@@ -8020,21 +8020,21 @@ void bootstrap_dependency_XZ_YZ_ADD(binary3 dataobs, extended3 ro, extended3 ta,
 			}
 			delete datarep[i];
 		}
-		delete datarep;
+		delete [] datarep;
 
       // mean_OR_common_att
 	  for (int i = 0; i < _nO+1; i++)
 		{
 			delete mean_OR_common_att[i];
 		}
-		delete 	mean_OR_common_att;
+		delete [] mean_OR_common_att;
 		
 	  // mean_OR_common_obj	
 	  for (int i = 0; i < _nA+1; i++)
 		{
 			delete mean_OR_common_obj[i];
 		}
-		delete 	mean_OR_common_obj;
+		delete [] mean_OR_common_obj;
  
 
 }
@@ -8176,11 +8176,11 @@ void generate_data_fixedobject_XZ_Y_DC(extended1 ga, extended3 ro , extended2 ta
 	}
 
 	// destruct latx & laty
-	delete latx;
-	delete laty;
+	delete [] latx;
+	delete [] laty;
 	
-	delete cumul;
-	delete latklas;
+	delete [] cumul;
+	delete [] latklas;
 
 }
 
@@ -8239,11 +8239,11 @@ void generate_data_fixedobject_X_YZ_DC(extended1 ga, extended2 ro , extended3 ta
 
 
 	// destruct latx & laty
-	delete latx;
-	delete laty;
+	delete [] latx;
+	delete [] laty;
 	
-	delete cumul;
-	delete latklas;
+	delete [] cumul;
+	delete [] latklas;
 
 }
 
@@ -8302,11 +8302,11 @@ void generate_data_fixedobject_XZ_YZ_DC(extended1 ga, extended3 ro , extended3 t
 	}
 
 	// destruct latx & laty
-	delete latx;
-	delete laty;
+	delete [] latx;
+	delete [] laty;
 	
-	delete cumul;
-	delete latklas;
+	delete [] cumul;
+	delete [] latklas;
 
 }
 
@@ -8366,11 +8366,11 @@ void generate_data_fixedobject_XZ_Y_ADD(extended1 ga, extended3 ro , extended2 t
 	}
 
 	// destruct latx & laty
-	delete latx;
-	delete laty;
+	delete [] latx;
+	delete [] laty;
 	
-	delete cumul;
-	delete latklas;
+	delete [] cumul;
+	delete [] latklas;
 
 }
 
@@ -8431,11 +8431,11 @@ void generate_data_fixedobject_X_YZ_ADD(extended1 ga, extended2 ro , extended3 t
 
 
 	// destruct latx & laty
-	delete latx;
-	delete laty;
+	delete [] latx;
+	delete [] laty;
 	
-	delete cumul;
-	delete latklas;
+	delete [] cumul;
+	delete [] latklas;
 
 }
 
@@ -8497,11 +8497,11 @@ void generate_data_fixedobject_XZ_YZ_ADD(extended1 ga, extended3 ro , extended3 
 	}
 
 	// destruct latx & laty
-	delete latx;
-	delete laty;
+	delete [] latx;
+	delete [] laty;
 	
-	delete cumul;
-	delete latklas;
+	delete [] cumul;
+	delete [] latklas;
 
 }
 
