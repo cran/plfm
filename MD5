@@ -1,4 +1,4 @@
-07a24651ae3b341dadd299756ea07d3f *DESCRIPTION
+8266a17f8a636f565107f94431a9abf2 *DESCRIPTION
 a8014d467451139a3a38762640a858c4 *NAMESPACE
 27933abb898a06d6eebded04ef7ac674 *R/plfm.R
 fb876fce55d87ef6a3e493c55864ab72 *data/anger.rda
@@ -16,7 +16,7 @@ fbb19278790640220304160f4f2f6878 *man/car2.Rd
 87146e4d45a8a46ad332275364b04dd2 *man/gendat.Rd
 a22008f21efd68c212dee0ff8d2d69bf *man/gendatLCplfm.Rd
 5b665dfa93efca8ba54996d1fbe2980a *man/hostility.Rd
-120e98657690b8bd5017d2cabed26093 *man/plfm-package.Rd
+bf46ebaada5563f645e8d98c1a82b6c4 *man/plfm-package.Rd
 6868a243e56c05869027d4dde6b13edc *man/plfm.Rd
 e0d2893f40fe9fd8e4c5c3b938113ba0 *man/plot.LCplfm.Rd
 c93f445756a14fc27ae740fce1903f9b *man/plot.plfm.Rd
@@ -37,6 +37,6 @@ b110614bc2f2820d46e1ef3c7be20e36 *man/summary.bayesplfm.Rd
 a78cd111fe271fcc4dcd7cf77f3051ce *man/summary.plfm.Rd
 47225d34c6a5c44ef7f82dff90e0c153 *man/summary.stepLCplfm.Rd
 400ea755f36831446be8fba60e59ca4d *man/summary.stepplfm.Rd
-25fd658537de97bef6fcf5e885936d6e *src/main.cpp
+3750612d04e4614345d7321949e25cc8 *src/main.cpp
 d4c75e0e936aee8365b602bf36b6f36b *src/plfm-win.def
 dd7c32ce2f860ba3952f127bf5cfdc62 *src/registerDynamicSymbol.cpp

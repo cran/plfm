@@ -5,16 +5,8 @@
 \description{
 Functions for estimating disjunctive, conjunctive or additive probabilistic latent feature models on (aggregated) binary three-way data
 }
-\details{
-\tabular{ll}{
-Package: \tab plfm\cr
-Type: \tab Package\cr
-Version: \tab 2.2.2\cr
-Date: \tab 2018-10-27\cr
-License: \tab GPL(>=2)\cr
-LazyLoad: \tab yes\cr
-}
 
+\details{
 Probabilistic latent feature models can be used to model three-way three-mode binary observations (e.g. persons who indicate for each of a number of products and for each of 
 a set of attributes whether a product has a certain attribute). A basic probabilistic feature model (referred to as \code{\link{plfm}}) uses aggregated three-way three-mode binary 
 data as input, namely the two-way two-mode frequency table that is obtained by summing the binary three-way three-mode data across persons. The basic probabilistic feature model 

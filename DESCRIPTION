@@ -1,8 +1,8 @@
 Package: plfm
 Type: Package
 Title: Probabilistic Latent Feature Analysis
-Version: 2.2.5
-Date: 2022-03-30
+Version: 2.2.6
+Date: 2024-02-14
 Authors@R: c(
     person("Michel", "Meulders", email = "michel.meulders@kuleuven.be", role = c("aut","cre")),
     person("Philippe", "De Bruecker", email = "philippe.debruecker@kuleuven.be", role = "ctb"))
@@ -15,7 +15,6 @@ License: GPL (>= 2)
 Repository: CRAN
 LazyLoad: yes
 LazyData: yes
-SystemRequirements: C++11
 NeedsCompilation: yes
-Packaged: 2022-03-30 13:39:08 UTC; u0010822
-Date/Publication: 2022-03-30 14:50:02 UTC
+Packaged: 2024-02-14 19:54:37 UTC; u0010822
+Date/Publication: 2024-02-15 00:40:02 UTC
